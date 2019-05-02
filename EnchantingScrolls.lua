@@ -1,17 +1,5 @@
 
--- enchant scroll IDs
--- vellumID is deprecated as of 4.0.1
-
-LSW.scrollData = {
-	-- 340	total recipes
-	-- 333	total scrolls
-	-- [???????] = 38958, -- Enchant Weapon - Exceptional Intellect can't find corresponding recipe
-	-- [???????] = 38957, -- Enchant Weapon - Exceptional Striking can't find corresponding recipe
-	-- [???????] = 5421, -- Fiery Blaze Enchantment can't find corresponding recipe
-	-- [???????] = 38994, -- Enchant Weapon - Exceptional Healing can't find corresponding recipe
-	-- [???????] = 38996, -- Enchant Bracers - Major Healing can't find corresponding recipe
-	-- [???????] = 38983, -- Enchant Shield - Mighty Stamina can't find corresponding recipe
-	-- [???????] = 38970, -- Enchant Gloves - Exceptional Healing can't find corresponding recipe
+TSP.scrollData = {
 
     --spellId, itemId
 
