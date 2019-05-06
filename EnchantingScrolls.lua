@@ -13,18 +13,22 @@ function TSP:ScanForScrolls()
         end
     end
 
+    self.db.scrollData = { }
+
     for itemID = 1, 250000 do
         local name = GetItemInfo(i)
         if name then
             local spellName, spellID = GetItemSpell(i)
             if spellsByName[spellName] then
                 for _,spellID in ipairs(spellsByName[spellName]) do
-                    print(format('    [%d] = %d, -- %s',
-                                 spellID, itemID, spellName))
+                    self.db.scrolLData[spellID] = itemID
                 end
             end
         end
     end
+
+    LoadAddOn('Blizzard_DebugTools')
+    DevTools_Dump(self.db.scrollData)
 end
 
 
