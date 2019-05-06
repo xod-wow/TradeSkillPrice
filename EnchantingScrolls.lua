@@ -1,4 +1,33 @@
 
+-- Open the UI to enchanting first
+function TSP:ScanForScrolls()
+    local spellsByName = { }
+
+    local spellIDs = C_TradeSkillUI.GetAllRecipeIDs()
+
+    for _,spellID in ipairs(spellIDs) do
+        local spellName = GetSpellInfo(spellID)
+        if spellName then
+            spellsByName[spellName] = spellsByName[spellName] or {}
+            table.insert(spellsByName[spellName], spellID)
+        end
+    end
+
+    for itemID = 1, 250000 do
+        local name = GetItemInfo(i)
+        if name then
+            local spellName, spellID = GetItemSpell(i)
+            if spellsByName[spellName] then
+                for _,spellID in ipairs(spellsByName[spellName]) do
+                    print(format('    [%d] = %d, -- %s',
+                                 spellID, itemID, spellName))
+                end
+            end
+        end
+    end
+end
+
+
 TSP.scrollData = {
 
     --spellId, itemId
