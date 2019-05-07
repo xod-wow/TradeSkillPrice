@@ -7,8 +7,13 @@
 ## SavedVariables: TradeSkillPriceDB
 
 Core.lua
-Pricing.lua
 EnchantingScrolls.lua
 
-TradeSkillPrice.xml
+Pricing.lua
+Pricing_Fixed.lua
+Pricing_Vendor.lua
+Pricing_Auctionator.lua
+Pricing_Auctioneer.lua
+Pricing_TheUndermineJournal.lua
 
+TradeSkillPrice.xml

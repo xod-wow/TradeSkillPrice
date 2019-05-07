@@ -68,17 +68,6 @@ function TSP:UpdateRecipeInfoCache()
     end
 end
 
-function TSP:GetItemValue(itemID)
-    local sellPrice, _, _, bindType = select(11, GetItemInfo(itemID))
-
-    if bindType == 1 then
-        return sellPrice
-    else
-        local auctionPrice = Atr_GetAuctionBuyout(itemID)
-        return max(auctionPrice or 0, sellPrice or 0)
-    end
-end
-
 local GetItemCostRecursive, GetItemCostRecursive
 
 GetRecipeCostRecursive = function (recipeID, seen)
@@ -88,57 +77,54 @@ GetRecipeCostRecursive = function (recipeID, seen)
         return nil
     end
 
-    local cost
+    local cost, source
     for itemID, count in pairs(object.reagents) do
-        local c = GetItemCostRecursive(itemID, seen)
+        local c, s = GetItemCostRecursive(itemID, seen)
         if c ~= nil then
             cost = (cost or 0) + c * count
         end
     end
     if cost ~= nil then
-        return cost / object.numCreated
-    else
-        return nil
+        return cost / object.numCreated, "r"
     end
 end
 
 GetItemCostRecursive = function (itemID, seen)
-    if TSP.db.fixedPrice and TSP.db.fixedPrice[itemID] then
-        return TSP.db.fixedPrice[itemID]
-    end
-
-    -- Unbound Tradeskill - Other items are assumed to be buyable
-    local sellPrice, classID, subID, bindType = select(11, GetItemInfo(itemID))
-    if bindType == 0 and classID == 7 and subID == 11 and sellPrice > 0 then
-        return sellPrice * 4
-    end
-
-    -- BoP items are valueless
-    if bindType == 1 then
-        return nil
-    end
-
     -- Can't depend on ourself, definitely not a winning strategy
     if seen[itemID] ~= nil then
-        return nil
+        return
     end
 
     if itemCostCache[itemID] ~= nil then
-        return itemCostCache[itemID]
+        return unpack(itemCostCache[itemID])
     end
 
-    local minCost = Atr_GetAuctionBuyout(itemID)
+    local minCost, minCostSource
 
-    seen[itemID] = true
-    for _,recipeID in ipairs(itemRecipesCache[itemID] or {}) do
-        local c = GetRecipeCostRecursive(recipeID, seen)
-        if c ~= nil and (minCost == nil or c < minCost) then
-            minCost = c
+    for _,f in ipairs(TSP.costFunctions) do
+        local c, s = f(itemID)
+        if c and (minCost == nil or c < minCost) then
+            minCost, minCostSource = c, s
         end
     end
 
-    itemCostCache[itemID] = minCost
-    return minCost
+    seen[itemID] = true
+    for _,recipeID in ipairs(itemRecipesCache[itemID] or {}) do
+        local c, s = GetRecipeCostRecursive(recipeID, seen)
+        if c and (minCost == nil or c < minCost) then
+            minCost, minCostSource = c, s
+        end
+    end
+
+    itemCostCache[itemID] = { minCost, minCostSource }
+    return minCost, minCostSource
+end
+
+function TSP:GetRecipeItem(recipeID)
+    local itemLink = C_TradeSkillUI.GetRecipeItemLink(recipeID)
+    local itemID = GetItemInfoFromHyperlink(itemLink)
+                    or TSP.scrollData[recipeID]
+    return itemID
 end
 
 function TSP:GetItemCost(itemID)
@@ -149,11 +135,17 @@ function TSP:GetRecipeCost(recipeID)
     return GetRecipeCostRecursive(recipeID, {})
 end
 
-function TSP:GetRecipeItem(recipeID)
-    local itemLink = C_TradeSkillUI.GetRecipeItemLink(recipeID)
-    local itemID = GetItemInfoFromHyperlink(itemLink)
-                    or TSP.scrollData[recipeID]
-    return itemID
+function TSP:GetItemValue(itemID)
+    local value, source
+
+    for _,f in ipairs(TSP.valueFunctions) do
+        local v, s = f(itemID)
+        if v and v > (value or 0) then
+            value, source = v, s
+        end
+    end
+
+    return value, source
 end
 
 function TSP:GetRecipeValue(recipeID)

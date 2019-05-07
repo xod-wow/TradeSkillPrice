@@ -8,6 +8,8 @@ local modName, modTable = ...
 
 TSP = CreateFrame("Frame", "TSP")
 TSP.version = GetAddOnMetadata(modName, "Version")
+TSP.costFunctions = {}
+TSP.valueFunctions = {}
 
 local defaultConfig = {
     vendorOverride = {},
@@ -44,7 +46,11 @@ function TSP:FormatMoneyFixed(money)
 
 end
 
-function TSP:FormatMoney(moneyString, hilight)
+function TSP:FormatSource(source)
+    return "|cffaaaaff" .. source .. "|r"
+end
+
+function TSP:FormatMoney(moneyString, highlight)
     if not moneyString then
         return nil, "?"
     end
@@ -62,7 +68,7 @@ function TSP:FormatMoney(moneyString, hilight)
     local GSC_SILVER = "ff808080"
     local GSC_COPPER = "ff643016"
 
-    if (hilight) then
+    if (highlight) then
         GSC_GOLD="ffffd100"
         GSC_SILVER="ffe6e6e6"
         GSC_COPPER="ffc8602c"
@@ -153,16 +159,26 @@ function TSP.SetUpRecipe(button, textWidth, tradeSkillInfo)
 
     local recipeID = tradeSkillInfo.recipeID
 
-    local costAmount = TSP:GetRecipeCost(recipeID)
-    local valueAmount = TSP:GetRecipeValue(recipeID) or 0
-    local hilight = (costAmount or 0) < (valueAmount or 0)
+    local costAmount, costSource = TSP:GetRecipeCost(recipeID)
+    local valueAmount, valueSource = TSP:GetRecipeValue(recipeID)
+    local highlight = (costAmount or 0) < (valueAmount or 0)
 
-    local valueText = TSP:FormatMoney(valueAmount, hilight) or "--"
-    button.lswValue.Text:SetText(valueText)
+    if valueAmount then
+        local valueText = TSP:FormatMoney(valueAmount, highlight)
+        local sourceText = TSP:FormatSource(valueSource)
+        button.lswValue.Text:SetText(valueText .. sourceText)
+    else
+        button.lswValue.Text:SetText('--')
+    end
+
+    if costAmount then
+        local costText = TSP:FormatMoney(costAmount)
+        button.lswCost.Text:SetText(costText)
+    else
+        button.lswCost.Text:SetText('--')
+    end
+
     button.lswValue:Show()
-
-    local costText = TSP:FormatMoney(costAmount, false) or "--"
-    button.lswCost.Text:SetText(costText)
     button.lswCost:Show()
 end
 
@@ -192,9 +208,14 @@ function TSP:CreateAllDynamicButtons()
 end
 
 function TSP.RefreshRecipeList()
-    if TradeSkillFrame:IsShown() then
+    if TradeSkillFrame and TradeSkillFrame:IsShown() then
         TradeSkillFrame.RecipeList:Refresh()
     end
+end
+
+function TSP:RecalculatePrices()
+    self:ClearItemCostCache()
+    self:RefreshRecipeList()
 end
 
 function TSP:Initialize()
@@ -203,11 +224,6 @@ function TSP:Initialize()
         self:CreateAllDynamicButtons()
         TradeSkillPriceDB = TradeSkillPriceDB or { }
         self.db = TradeSkillPriceDB
-
-        Atr_RegisterFor_DBupdated(function ()
-                self:ClearItemCostCache()
-                self:RefreshRecipeList()
-            end)
         self.initialized = true
     end
 end
