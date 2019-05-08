@@ -207,7 +207,7 @@ function TSP:CreateAllDynamicButtons()
     end
 end
 
-function TSP.RefreshRecipeList()
+function TSP:RefreshRecipeList()
     if TradeSkillFrame and TradeSkillFrame:IsShown() then
         TradeSkillFrame.RecipeList:Refresh()
     end
