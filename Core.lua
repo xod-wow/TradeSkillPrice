@@ -235,9 +235,10 @@ TSP:SetScript("OnEvent",
     function(self, event, arg1, arg2)
         if event == "TRADE_SKILL_SHOW" then
             self:Initialize()
-            self:ClearItemCostCache()
-        elseif event == "TRADE_SKILL_DATA_SOURCE_CHANGED" then
-            self:ClearItemCostCache()
             self:UpdateRecipeInfoCache()
+            self:RecalculatePrices()
+        elseif event == "TRADE_SKILL_DATA_SOURCE_CHANGED" then
+            self:UpdateRecipeInfoCache()
+            self:RecalculatePrices()
         end
     end)
