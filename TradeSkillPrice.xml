@@ -1,5 +1,24 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
 
+<!--
+
+    Copyright 2019 Mike Battersby
+
+    This file is part of TradeSkillPrice.
+
+    TradeSkillPrice is free software; you can redistribute it or modify it
+    under the terms of the GNU General Public License as published by the Free
+    Software Foundation, version 2, 1991.
+
+    TradeSkillPrice is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    See the file LICENSE.txt for details.
+
+-->
+
 <Button name="TSPButtonTemplate" hidden="false" virtual="true">
     <Size x="23" y="16"/>
 
