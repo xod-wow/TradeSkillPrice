@@ -29,18 +29,22 @@ local defaultConfig = {
     fixedPrice = {},
 }
 
-function TSP:ChatMessage(msg)
-    DEFAULT_CHAT_FRAME:AddMessage("|cff80d060"..(msg or "nil"))
-end
-
-function TSP:ErrorMessage(msg)
-    DEFAULT_CHAT_FRAME:AddMessage("|cffff0000"..(msg or "nil"))
-end
-
-function TSP:DebugMessage(flag, msg)
-    if flag then
-        DEFAULT_CHAT_FRAME:AddMessage("|cfff0f030"..(msg or "nil"))
+local function GetActiveChatFrame()
+    if not ChatWindowCache then
+        ChatWindowCache = { }
+        for i = 1,NUM_CHAT_WINDOWS do
+            tinsert(ChatWindowCache, _G["ChatFrame"..i])
+        end
     end
+
+    for _,f in pairs(ChatWindowCache) do
+        if f:IsShown() then return f end
+    end
+    return DEFAULT_CHAT_FRAME
+end
+
+function TSP:ChatMessage(msg)
+    GetActiveChatFrame():AddMessage("|cff80d060"..(msg or "nil"))
 end
 
 function TSP:FormatMoneyFixed(money)
@@ -232,26 +236,25 @@ function TSP:RecalculatePrices()
 end
 
 function TSP:Initialize()
-    if not self.initialized then
-        self:ChatMessage(modName .. " " ..self.version)
-        self:CreateAllDynamicButtons()
-        TradeSkillPriceDB = TradeSkillPriceDB or { }
-        self.db = TradeSkillPriceDB
-        self.initialized = true
-    end
+    TradeSkillPriceDB = TradeSkillPriceDB or { }
+    self.db = TradeSkillPriceDB
+    self.initialized = true
 end
 
+TSP:RegisterEvent("ADDON_LOADED")
 TSP:RegisterEvent("TRADE_SKILL_SHOW")
 TSP:RegisterEvent("TRADE_SKILL_DATA_SOURCE_CHANGED")
 
 TSP:SetScript("OnEvent",
     function(self, event, arg1, arg2)
         if event == "TRADE_SKILL_SHOW" then
-            self:Initialize()
+            self:CreateAllDynamicButtons()
             self:UpdateRecipeInfoCache()
             self:RecalculatePrices()
         elseif event == "TRADE_SKILL_DATA_SOURCE_CHANGED" then
             self:UpdateRecipeInfoCache()
             self:RecalculatePrices()
+        elseif event == "ADDON_LOADED" and arg1 == modName then
+            self:Initialize()
         end
     end)
