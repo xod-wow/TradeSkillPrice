@@ -17,12 +17,10 @@
 
 ----------------------------------------------------------------------------]]--
 
+
 local function GetVendorCost(itemID)
-    -- Unbound Tradeskill - Other items are assumed to be buyable
-    local sellPrice, classID, subID, bindType = select(11, GetItemInfo(itemID))
-    if bindType == 0 and classID == 7 and subID == 11 and sellPrice > 0 then
-        return sellPrice * 4, "v"
-    end
+    TSP.db.merchantItems = TSP.db.merchantItems or {}
+    return TSP.db.merchantItems[itemID], "v"
 end
 
 local function GetVendorValue(itemID)
@@ -30,5 +28,26 @@ local function GetVendorValue(itemID)
     return sellPrice, "v"
 end
 
+local function ScanMerchantForReagents()
+    TSP.db.merchantItems = TSP.db.merchantItems or {}
+
+    local _, price, numAvailable, isPurchasable, currencyID
+
+    for i = 1, GetMerchantNumItems() do
+        local id = GetMerchantItemID(i)
+        _, _, price, _, numAvailable, isPurchasable, _, _, currencyID = GetMerchantItemInfo(i)
+
+        if price > 0 and numAvailable < 0 and isPurchasable and not currencyID then
+            if select(12, GetItemInfo(id)) == 7 then
+                TSP.db.merchantItems[id] = price
+            end
+        end
+    end
+end
+
 table.insert(TSP.costFunctions, GetVendorCost)
 table.insert(TSP.valueFunctions, GetVendorValue)
+
+local scanner = CreateFrame('frame')
+scanner:RegisterEvent('MERCHANT_SHOW')
+scanner:SetScript('OnEvent', ScanMerchantForReagents)
