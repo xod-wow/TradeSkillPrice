@@ -20,7 +20,9 @@
 
 local function GetVendorCost(itemID)
     TSP.db.merchantItems = TSP.db.merchantItems or {}
-    return TSP.db.merchantItems[itemID], "v"
+    if TSP.db.merchantItems[itemID] then
+        return TSP.db.merchantItems[itemID], "v"
+    end
 end
 
 local function GetVendorValue(itemID)
