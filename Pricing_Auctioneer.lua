@@ -32,8 +32,16 @@ local function Cost(itemID)
 end
 
 if AucAdvanced and AucAdvanced.API then
-    table.insert(TSP.valueFunctions, Value)
-    table.insert(TSP.costFunctions, Cost)
+    table.insert(TSP.valueFunctions,
+                {
+                    ['name'] = 'Auctioneer',
+                    ['func'] =  Value
+                })
+    table.insert(TSP.costFunctions,
+                {
+                    ['name'] = 'Auctioneer',
+                    ['func'] =  Cost
+                })
 
     local mod = AucAdvanced.NewModule("Util", "TradeSkillPrice")
     mod.Processors = {}

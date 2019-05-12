@@ -121,7 +121,7 @@ GetItemCostRecursive = function (itemID, seen)
     local minCost, minCostSource
 
     for _,f in ipairs(TSP.costFunctions) do
-        local c, s = f(itemID)
+        local c, s = f.func(itemID)
         if c and (minCost == nil or c < minCost) then
             minCost, minCostSource = c, s
         end
@@ -158,7 +158,7 @@ function TSP:GetItemValue(itemID)
     local value, source
 
     for _,f in ipairs(TSP.valueFunctions) do
-        local v, s = f(itemID)
+        local v, s = f.func(itemID)
         if v and v > (value or 0) then
             value, source = v, s
         end

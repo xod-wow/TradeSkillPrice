@@ -24,6 +24,14 @@ local function AuctionPrice(itemID)
 end
 
 if TUJMarketInfo then
-    table.insert(TSP.valueFunctions, AuctionPrice)
-    table.insert(TSP.costFunctions, AuctionPrice)
+    table.insert(TSP.valueFunctions,
+                {
+                    ['name'] = 'TheUndermineJournal',
+                    ['func'] = AuctionPrice
+                })
+    table.insert(TSP.costFunctions,
+                {
+                    ['name'] = 'TheUndermineJournal',
+                    ['func'] = AuctionPrice
+                })
 end

@@ -23,4 +23,8 @@ local function Cost(itemID)
     end
 end
 
-table.insert(TSP.costFunctions, Cost)
+table.insert(TSP.costFunctions,
+            {
+                ['name'] = 'Fixed',
+                ['func'] = Cost
+            })

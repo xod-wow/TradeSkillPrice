@@ -36,9 +36,21 @@ local function Cost(itemID)
 end
 
 if Atr_GetAuctionPrice then
-    table.insert(TSP.valueFunctions, AuctionValue)
-    table.insert(TSP.valueFunctions, DisenchantValue)
-    table.insert(TSP.costFunctions, Cost)
+    table.insert(TSP.valueFunctions,
+                {
+                    ['name'] = 'Auctionator',
+                    ['func'] =  AuctionValue
+                })
+    table.insert(TSP.valueFunctions,
+                {
+                    ['name'] = 'Auctionator Disenchant',
+                    ['func'] = DisenchantValue
+                })
+    table.insert(TSP.costFunctions,
+                {
+                    ['name'] = 'Auctionator',
+                    ['func'] = Cost
+                })
 
     Atr_RegisterFor_DBupdated(function () TSP:RecalculatePrices() end)
 end

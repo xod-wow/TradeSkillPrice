@@ -47,8 +47,15 @@ local function ScanMerchantForReagents()
     end
 end
 
-table.insert(TSP.costFunctions, GetVendorCost)
-table.insert(TSP.valueFunctions, GetVendorValue)
+table.insert(TSP.costFunctions,
+            {
+                ['name'] = TRANSMOG_SOURCE_3,
+                ['func'] = GetVendorCost
+            })
+table.insert(TSP.valueFunctions, { 
+                ['name'] = TRANSMOG_SOURCE_3,
+                ['func'] = GetVendorValue
+            })
 
 local scanner = CreateFrame('frame')
 scanner:RegisterEvent('MERCHANT_SHOW')
