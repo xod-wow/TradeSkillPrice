@@ -30,15 +30,9 @@ local defaultConfig = {
 }
 
 local function GetActiveChatFrame()
-    if not ChatWindowCache then
-        ChatWindowCache = { }
-        for i = 1,NUM_CHAT_WINDOWS do
-            tinsert(ChatWindowCache, _G["ChatFrame"..i])
-        end
-    end
-
-    for _,f in pairs(ChatWindowCache) do
-        if f:IsShown() then return f end
+    for i = 1,NUM_CHAT_WINDOWS do
+        local f = _G["ChatFrame"..i]
+        if f:IsVisible() then return f end
     end
     return DEFAULT_CHAT_FRAME
 end
@@ -76,7 +70,7 @@ function TSP:FormatMoney(moneyString, highlight)
     local money = tonumber(moneyString)
 
 
-    if (money < 0) then
+    if money < 0 then
         neg = true
         money = -money
     end
@@ -85,7 +79,7 @@ function TSP:FormatMoney(moneyString, highlight)
     local GSC_SILVER = "ff808080"
     local GSC_COPPER = "ff643016"
 
-    if (highlight) then
+    if highlight then
         GSC_GOLD="ffffd100"
         GSC_SILVER="ffe6e6e6"
         GSC_COPPER="ffc8602c"
@@ -249,11 +243,14 @@ TSP:SetScript("OnEvent",
     function(self, event, arg1, arg2)
         if event == "TRADE_SKILL_SHOW" then
             self:CreateAllDynamicButtons()
-            self:UpdateRecipeInfoCache()
-            self:RecalculatePrices()
         elseif event == "TRADE_SKILL_DATA_SOURCE_CHANGED" then
             self:UpdateRecipeInfoCache()
             self:RecalculatePrices()
+            -- The first time we load the tradeskill the client doesn't have
+            -- cached info so GetItemInfo() returns nil. Auctionator (at least)
+            -- is keyed off name so it doesn't return sensible values at that
+            -- point. This triggers a refresh to try to pick up the data.
+            C_Timer.After(2, function () self:RecalculatePrices() end)
         elseif event == "ADDON_LOADED" and arg1 == modName then
             self:Initialize()
         end
