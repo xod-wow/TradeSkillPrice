@@ -37,19 +37,15 @@ local function UpdateRecipeInfoCacheObject(object)
         return
     end
 
-    local itemLink = C_TradeSkillUI.GetRecipeItemLink(object.recipeID)
-    local itemID = GetItemInfoFromHyperlink(itemLink)
+    object.itemLink = C_TradeSkillUI.GetRecipeItemLink(object.recipeID)
+    object.itemID = GetItemInfoFromHyperlink(object.itemLink)
 
-    object.itemLink = itemLink
-    object.itemID = itemID
-
-    local min, max
-    if not itemID then
-        itemID = TSP.scrollData[object.recipeID]
+    if not object.itemID then
+        object.itemID = TSP.scrollData[object.recipeID]
         object.numCreated = 1
     else
-        local min, max = C_TradeSkillUI.GetRecipeNumItemsProduced(object.recipeID)
-        object.numCreated = (min+max)/2
+        local a, b = C_TradeSkillUI.GetRecipeNumItemsProduced(object.recipeID)
+        object.numCreated = (a+b)/2
     end
 
     object.reagents = object.reagents or { }
@@ -66,9 +62,9 @@ local function UpdateRecipeInfoCacheObject(object)
 
     recipeInfoCache[object.recipeID] = object
 
-    if itemID then
-        itemRecipesCache[itemID] = itemRecipesCache[itemID] or { }
-        table.insert(itemRecipesCache[itemID], object.recipeID)
+    if object.itemID then
+        itemRecipesCache[object.itemID] = itemRecipesCache[object.itemID] or { }
+        table.insert(itemRecipesCache[object.itemID], object.recipeID)
     end
 end
 
