@@ -32,5 +32,6 @@ Pricing_Vendor.lua
 Pricing_Auctionator.lua
 Pricing_Auctioneer.lua
 Pricing_TheUndermineJournal.lua
+Pricing_TradeSkillPrice.lua
 
 TradeSkillPrice.xml
