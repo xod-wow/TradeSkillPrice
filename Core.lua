@@ -41,7 +41,7 @@ function TSP:ChatMessage(msg)
     GetActiveChatFrame():AddMessage("|cff80d060"..(msg or "nil"))
 end
 
-function TSP:FormatMoneyFixed(money)
+function TSP:FormatMoneyForTooltip(money)
     local g = math.floor(money/10000)
     local s = math.fmod(math.floor(money/100),100)
     local c = math.fmod(money,100)
