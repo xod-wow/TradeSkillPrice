@@ -17,18 +17,26 @@
 
 ----------------------------------------------------------------------------]]--
 
-local function AuctionItemListUpdate(self)
-    TSP.auctionData = TSP.auctionData or {}
+local abortScan
+
+local function StartScan()
 
     local now = time()
 
-    local batchSize, totalItems = GetNumAuctionItems("list")
+    local batchSize, totalItems = GetNumAuctionItems('list')
+
+    print('Scanning ' .. totalItems)
 
     local name, texture, count, quality, canUse, level, levelColHeader, minBid,
         minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
         ownerFullName, saleStatus, itemID, hasAllInfo
 
     for i = 1, totalItems do
+        if abortScan then
+            abortScan = false
+            return
+        end
+
         name,           -- [1]
         texture,        -- [2]
         count,          -- [3]
@@ -47,13 +55,52 @@ local function AuctionItemListUpdate(self)
         saleStatus,     -- [16]
         itemID,         -- [17]
         hasAllInfo      -- [18]
-            = GetAuctionItemInfo("list", i)
+            = GetAuctionItemInfo('list', i)
 
         if buyoutPrice and buyoutPrice > 0 then
             TSP.auctionData[itemID] = TSP.auctionData[itemID] or  {}
             table.insert(TSP.auctionData[itemID], { buyoutPrice/count, now })
         end
+        if i % 1000 == 0 then
+            print(i)
+        end
+        if i % 25 == 0 then
+            coroutine.yield()
+        end
     end
+end
+
+local function OnUpdate(self, elapsed)
+    self.totalElapsed = (self.totalElapsed or 0) + elapsed
+    if self.totalElapsed < 0.1 then
+        return
+    else
+        self.totalElapsed = 0
+    end
+
+    if not self.thread or coroutine.status(self.thread) == 'dead' then
+        self:SetScript('OnUpdate', nil)
+        self.thread = nil
+        self.totalElapsed = nil
+    else
+        local t, e = coroutine.resume(self.thread)
+        if t == false then
+            print(e)
+        end
+    end
+end
+
+local function AuctionItemListUpdate(self)
+    TSP.auctionData = TSP.auctionData or {}
+
+    if self.thread then
+        abortScan = true
+        coroutine.resume(self.thread)
+        OnUpdate(self, 1)
+    end
+
+    self.thread = coroutine.create(StartScan)
+    self:SetScript('OnUpdate', OnUpdate)
 end
 
 -- it doesn't really matter that much if this is a bit slow to query as long
@@ -61,11 +108,12 @@ end
 -- need to optimize for dealing with that.
 
 local function OnEvent(self, event, ...)
-    if event == "AUCTION_HOUSE_SHOW" then
-        self:RegisterEvent("AUCTION_ITEM_LIST_UPDATE")
-    elseif event == "AUCTION_HOUSE_CLOSED" then
-        self:UnregisterEvent("AUCTION_ITEM_LIST_UPDATE")
-    elseif event == "AUCTION_ITEM_LIST_UPDATE" then
+    if event == 'AUCTION_HOUSE_SHOW' then
+        self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE')
+    elseif event == 'AUCTION_HOUSE_CLOSED' then
+        CancelCurrentScan()
+        self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE')
+    elseif event == 'AUCTION_ITEM_LIST_UPDATE' then
         AuctionItemListUpdate(self)
     end
 end
@@ -73,7 +121,7 @@ end
 function TSP:ScanAH()
     local canQuery, canQueryAll = CanSendAuctionQuery()
     if canQueryAll then
-        QueryAuctionItems("", nil, nil, 0, nil, nil, true, false, nil)
+        QueryAuctionItems('', nil, nil, 0, nil, nil, true, false, nil)
     end
 end
 
