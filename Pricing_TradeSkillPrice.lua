@@ -19,21 +19,15 @@
 
 local abortScan
 
-local function StartScan()
-
-    local now = time()
-
-    local batchSize, totalItems = GetNumAuctionItems('list')
-
-    print('Scanning ' .. batchSize)
+local function StartScan(now, size)
 
     local name, texture, count, quality, canUse, level, levelColHeader, minBid,
         minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
         ownerFullName, saleStatus, itemID, hasAllInfo
 
-    for i = 1, batchSize do
+    for i = 1, size do
         if abortScan then
-            abortScan = false
+            abortScan = nil
             return
         end
 
@@ -91,15 +85,24 @@ local function OnUpdate(self, elapsed)
 end
 
 local function AuctionItemListUpdate(self)
-    TSP.auctionData = TSP.auctionData or {}
+    local batchSize, totalItems = GetNumAuctionItems('list')
 
-    if self.thread then
-        abortScan = true
-        coroutine.resume(self.thread)
-        OnUpdate(self, 1)
+    if batchSize ~= totalItems then
+        -- we only support getall scans
+        return
     end
 
-    self.thread = coroutine.create(StartScan)
+    -- You can't get another set of getall data within 15 minutes so
+    -- all the rest of the events are refinements of the getall
+    if self.thread then
+        return
+    end
+
+    TSP.auctionData = TSP.auctionData or {}
+
+    local now = time()
+
+    self.thread = coroutine.create(function () StartScan(now, batchSize) end)
     self:SetScript('OnUpdate', OnUpdate)
 end
 
@@ -111,7 +114,7 @@ local function OnEvent(self, event, ...)
     if event == 'AUCTION_HOUSE_SHOW' then
         self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE')
     elseif event == 'AUCTION_HOUSE_CLOSED' then
-        CancelCurrentScan()
+        abortScan = true
         self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE')
     elseif event == 'AUCTION_ITEM_LIST_UPDATE' then
         AuctionItemListUpdate(self)
