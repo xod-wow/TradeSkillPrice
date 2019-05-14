@@ -83,7 +83,7 @@ function TSP:UpdateRecipeInfoCache()
     end
 end
 
-local GetItemCostRecursive, GetItemCostRecursive
+local GetItemCostRecursive, GetRecipeCostRecursive
 
 GetRecipeCostRecursive = function (recipeID, seen)
     local object = recipeInfoCache[recipeID]
@@ -97,6 +97,10 @@ GetRecipeCostRecursive = function (recipeID, seen)
         local c, s = GetItemCostRecursive(itemID, seen)
         if c ~= nil then
             cost = (cost or 0) + c * count
+        elseif select(14, GetItemInfo(itemID)) ~= 1 then
+            -- We found an unbound object we don't have a price for
+            -- What if GetItemInfo doesn't work yet?
+            return
         end
     end
     if cost ~= nil then
