@@ -17,37 +17,54 @@
 
 ----------------------------------------------------------------------------]]--
 
--- Open the UI to enchanting first
+-- Steps:
+--  1. Open the tradeskill UI to enchanting
+--  2. /run TSP:Precache()
+--  3. /run TSP:ScanForScrolls()
+--  4. /reloadui
+--  5. Copy the data from the SavedVariables file
+--  6. /run TSP.db.scrollData = nil
+--  7. /reloadui
 
-local spellsByName = { }
-local spellsByID = {}
+local recipeSpellsByName = { }
+local recipeSpellsByID = {}
 
 function TSP:Precache()
-    for i = 1, 250000 do
-        GetItemSpell(i)
+    for itemID = 1, 250000 do
+        GetItemSpell(itemID)
     end
 
-    for _,id in ipairs(C_TradeSkillUI.GetAllRecipeIDs()) do
-        GetSpellInfo(id)
+    for _,recipeSpellID in ipairs(C_TradeSkillUI.GetAllRecipeIDs()) do
+        GetSpellInfo(recipeSpellID)
     end
 end
 
+-- Strictly speaking this is not just scrolls, but anything where there's
+-- an item that casts the same spell as the tradeskill does. By observation
+-- the enchanting scrolls cast the rank 1 version of the spell, but there's
+-- no reason to believe that will always be the case.
+
 function TSP:ScanForScrolls()
 
-    for _,id in ipairs(C_TradeSkillUI.GetAllRecipeIDs()) do
-        local name = GetSpellInfo(spellID)
-        spellsByID[id] = name
-        spellsByName[name] = spellsByName[name] or {}
-        table.insert(spellsByName[name], id)
+    for _,recipeSpellID in ipairs(C_TradeSkillUI.GetAllRecipeIDs()) do
+        local recipeSpellName = GetSpellInfo(recipeSpellID)
+        recipeSpellsByID[recipeSpellID] = recipeSpellName
+        recipeSpellsByName[recipeSpellName] = recipeSpellsByName[recipeSpellName] or {}
+        table.insert(recipeSpellsByName[recipeSpellName], recipeSpellID)
     end
 
     self.db.scrollData = { }
 
     for itemID = 1, 250000 do
-        local spellName, spellID = GetItemSpell(itemID)
-        if spellID and spellsByID[spellID] then
-            for _,id in ipairs(spellsByName[spellsByID[spellID]]) do
-                self.db.scrollData[id] = itemID
+        local itemSpellName, itemSpellID = GetItemSpell(itemID)
+
+        -- if the item casts a spell and any recipe also casts that spell
+        if itemSpellID and recipeSpellsByID[itemSpellID] then
+            -- associate the item with all recipes that cast the spell,
+            -- matching them by name
+            local spellName = recipeSpellsByID[itemSpellID]
+            for _,spellID in ipairs(recipeSpellsByName[spellName]) do
+                self.db.scrollData[spellID] = itemID
             end
         end
     end
