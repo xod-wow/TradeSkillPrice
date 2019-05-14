@@ -17,6 +17,8 @@
 
 ----------------------------------------------------------------------------]]--
 
+local modName, modTable = ...
+
 local abortScan
 local unregisteredFrames = {}
 
@@ -187,6 +189,10 @@ if #TSP.valueFunctions == 1 then
                     ['func'] =  GetMinPrice,
                 })
 else
-    -- Don't keep our old possible stale data around
-    TSP.db.auctionData = nil
+    -- Don't keep our old possibly stale data around
+    scanner:RegisterEvent('ADDON_LOADED')
+    scanner:SetScript('OnEvent', function (self, event, arg1)
+            if arg1 == modName then TSP.db.auctionData = nil end
+            self:UnregisterEvent('ADDON_LOADED')
+        end)
 end
