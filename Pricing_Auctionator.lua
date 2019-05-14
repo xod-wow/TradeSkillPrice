@@ -20,13 +20,16 @@
 local IDCache = { }
 
 -- Auctionator's data is indexed only by name, and access using ids goes
--- through a GetItemInfo name lookup
+-- through a GetItemInfo name lookup (which means that they're not available
+-- at first request).
 --
 -- Auctionator keeps the itemIDs for the name in its history DB but it
 -- never seems to use them, or make them available. Also some of them are
--- in gAtr_ScanDB, but not many.
+-- in gAtr_ScanDB for items that are manually scanned.
 --
--- Honestly the more I look at it the worse it seems.
+-- Honestly the more I look at it the worse it seems. I guess the auction
+-- API added the itemID after they wrote the addon and they never rewrote
+-- it to take advantage.
 
 local function RebuildIDCache()
     wipe(IDCache)
