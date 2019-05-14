@@ -37,8 +37,9 @@ local function GetActiveChatFrame()
     return DEFAULT_CHAT_FRAME
 end
 
-function TSP:ChatMessage(msg)
-    GetActiveChatFrame():AddMessage("|cff80d060"..(msg or "nil"))
+function TSP:ChatMessage(...)
+    local msg = format(...)
+    GetActiveChatFrame():AddMessage("|cff80d060"..msg.."|r")
 end
 
 function TSP:FormatMoneyForTooltip(money)
