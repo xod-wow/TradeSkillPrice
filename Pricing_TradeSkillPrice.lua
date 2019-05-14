@@ -25,13 +25,13 @@ local function StartScan()
 
     local batchSize, totalItems = GetNumAuctionItems('list')
 
-    print('Scanning ' .. totalItems)
+    print('Scanning ' .. batchSize)
 
     local name, texture, count, quality, canUse, level, levelColHeader, minBid,
         minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
         ownerFullName, saleStatus, itemID, hasAllInfo
 
-    for i = 1, totalItems do
+    for i = 1, batchSize do
         if abortScan then
             abortScan = false
             return
