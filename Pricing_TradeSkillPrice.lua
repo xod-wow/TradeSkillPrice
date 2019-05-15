@@ -19,7 +19,7 @@
 
 local modName, modTable = ...
 
-local abortScan
+local abortScan, lastGetAllTime = nil, 0
 
 local AuctionHouseScanner = CreateFrame('Frame')
 local lockoutFrame, needReregister
@@ -162,11 +162,8 @@ local function OnUpdate(self, elapsed)
         self:SetScript('OnUpdate', nil)
         self.thread = nil
         self.totalElapsed = nil
-        if CanSendAuctionQuery() then
-            QueryAuctionItems('xyzzy', nil, nil, 0, nil, nil, false, false, nil)
-        else
-            UnlockBlizzard()
-        end
+        QueryAuctionItems('x_y_z_z_y')
+        C_Timer.After(0.5, UnlockBlizzard)
     else
         local t, e = coroutine.resume(self.thread)
         if t == false then
@@ -186,7 +183,13 @@ local function AuctionItemListUpdate(self)
         TSP:ChatMessage('Non-getall scan found')
         UnlockBlizzard()
         -- return
+    elseif time() < lastGetAllTime + 890 then
+        -- the getall seems to trigger returning the data twice, so we
+        -- guard against seeing it again too soon, as it can only happen
+        -- every 900 seconds.
+        return
     else
+        lastGetAllTime = time()
         table.wipe(TSP.db.auctionData)
     end
 
@@ -199,7 +202,10 @@ local function AuctionItemListUpdate(self)
     -- extra results while we're in the middle of doing something.
 
     if self.thread then
+        TSP:ChatMessage('Duplicate? %d %d', batchSize, totalItems)
         return
+    else
+        TSP:ChatMessage('New? %d %d', batchSize, totalItems)
     end
 
     TSP:ChatMessage('Starting auction house data scan.')
