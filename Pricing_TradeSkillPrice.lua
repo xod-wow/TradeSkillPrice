@@ -21,27 +21,58 @@ local modName, modTable = ...
 
 local abortScan
 
-local scanner = CreateFrame('Frame')
-local lockoutFrame
+local AuctionHouseScanner = CreateFrame('Frame')
+local lockoutFrame, needReregister
+
+local function CreateLockoutFrame()
+
+    local f = CreateFrame('Frame', nil, AuctionFrame)
+    f:EnableMouse(true)
+    f:SetFrameStrata('HIGH')
+    f:SetAllPoints()
+
+    f.texture = f:CreateTexture(nil, 'ARTWORK')
+    f.texture:SetAllPoints()
+    f.texture:SetColorTexture(0, 0.5, 0, 0.5)
+
+    f.message = f:CreateFontString(nil, 'OVERLAY')
+    f.message:SetPoint('CENTER', f, 'CENTER', 0, 48)
+    f.message:SetFontObject(GameFontHighlightHuge)
+    f.message:SetText('Auction House scan in progress, please wait.')
+
+    f.progress = f:CreateFontString(nil, 'OVERLAY')
+    f.progress:SetPoint('CENTER', f, 'CENTER', 0, 0)
+    f.progress:SetFontObject(GameFontNormalHuge)
+
+    f.cancel = CreateFrame('Button', nil, f, 'MagicButtonTemplate')
+    f.cancel:SetPoint('CENTER', f, 'CENTER', 0, -48)
+    f.cancel:SetText(CANCEL)
+    f.cancel:SetScript('OnClick', function () abortScan = true end)
+
+    return f
+end
 
 function LockoutBlizzard()
-    if not lockoutFrame then
-        lockoutFrame = CreateFrame('Frame', nil, AuctionFrameBrowse)
-        lockoutFrame:SetFrameStrata('OVERLAY')
-        lockoutFrame:SetAllPoints()
-        lockoutFrame.texture = lockoutFrame:CreateTexture(nil, 'ARTWORK')
-        lockoutFrame.texture:setAllPoints()
-        lockoutFrame.texture:SetColorTexture(0, 0.5, 0, 0.5)
-    end
+    if not AuctionFrame then return end
 
+    lockoutFrame = lockoutFrame or CreateLockoutFrame()
     lockoutFrame:Show()
+
     AuctionFrameBrowse:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE')
+    needReregister = true
 end
 
 function UnlockBlizzard()
+    if not AuctionFrameBrowse then return end
+
     QueryAuctionItems('xyzzy', nil, nil, 0, nil, nil, false, false, nil)
-    lockoutFrame:Hide()
-    AuctionFrameBrowse:RegisterEvent('AUCTION_ITEM_LIST_UPDATE')
+    if lockoutFrame then
+        lockoutFrame:Hide()
+    end
+    if needReregister then
+        AuctionFrameBrowse:RegisterEvent('AUCTION_ITEM_LIST_UPDATE')
+        needReregister = nil
+    end
 end
 
 local function StartScan(now, size)
@@ -51,6 +82,8 @@ local function StartScan(now, size)
         ownerFullName, saleStatus, itemID, hasAllInfo
 
     local data = TSP.db.auctionData
+
+    lockoutFrame.progress:SetText(format('0/%d', size))
 
     for i = 1, size do
         if abortScan then
@@ -93,7 +126,7 @@ local function StartScan(now, size)
         end
 
         if i % 1000 == 0 then
-            TSP:ChatMessage("Processing auction data: %d/%d", i, size)
+            lockoutFrame.progress:SetText(format('%d/%d', i, size))
             coroutine.yield()
         end
     end
@@ -124,8 +157,8 @@ end
 local function AuctionItemListUpdate(self)
     local batchSize, totalItems = GetNumAuctionItems('list')
 
-    if batchSize ~= totalItems then
-        TSP:ChatMessage('Non-getall scan found, ignoring')
+    if batchSize == 0 or batchSize ~= totalItems then
+        TSP:ChatMessage('Empty or non-getall scan found, ignoring')
         -- we only support getall scans
         return
     end
@@ -168,6 +201,7 @@ function TSP:ScanAH()
     local canQuery, canQueryAll = CanSendAuctionQuery()
     if canQueryAll then
         LockoutBlizzard()
+        lockoutFrame.progress:SetText("Waiting for data")
         QueryAuctionItems('', nil, nil, 0, nil, nil, true, false, nil)
     end
 end
@@ -176,9 +210,9 @@ end
 -- This is not a good test
 
 if #TSP.valueFunctions == 1 then
-    scanner:RegisterEvent('AUCTION_HOUSE_SHOW')
-    scanner:RegisterEvent('AUCTION_HOUSE_CLOSED')
-    scanner:SetScript('OnEvent', OnEvent)
+    AuctionHouseScanner:RegisterEvent('AUCTION_HOUSE_SHOW')
+    AuctionHouseScanner:RegisterEvent('AUCTION_HOUSE_CLOSED')
+    AuctionHouseScanner:SetScript('OnEvent', OnEvent)
 
     table.insert(TSP.valueFunctions,
                 {
@@ -192,8 +226,8 @@ if #TSP.valueFunctions == 1 then
                 })
 else
     -- Don't keep our old possibly stale data around
-    scanner:RegisterEvent('ADDON_LOADED')
-    scanner:SetScript('OnEvent', function (self, event, arg1)
+    AuctionHouseScanner:RegisterEvent('ADDON_LOADED')
+    AuctionHouseScanner:SetScript('OnEvent', function (self, event, arg1)
             if arg1 == modName then TSP.db.auctionData = nil end
             self:UnregisterEvent('ADDON_LOADED')
         end)
