@@ -56,6 +56,7 @@ function LockoutBlizzard()
     if not AuctionFrame then return end
 
     lockoutFrame = lockoutFrame or CreateLockoutFrame()
+    lockoutFrame.progress:SetText("Waiting for data from server")
     lockoutFrame:Show()
 
     AuctionFrameBrowse:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE')
@@ -65,7 +66,6 @@ end
 function UnlockBlizzard()
     if not AuctionFrameBrowse then return end
 
-    QueryAuctionItems('xyzzy', nil, nil, 0, nil, nil, false, false, nil)
     if lockoutFrame then
         lockoutFrame:Hide()
     end
@@ -75,7 +75,9 @@ function UnlockBlizzard()
     end
 end
 
-local function StartScan(now, size)
+local function StartScan(size)
+
+    local now = time()
 
     local name, texture, count, quality, canUse, level, levelColHeader, minBid,
         minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
@@ -83,10 +85,15 @@ local function StartScan(now, size)
 
     local data = TSP.db.auctionData
 
-    lockoutFrame.progress:SetText(format('0/%d', size))
+    if lockoutFrame and lockoutFrame:IsShown() then
+        lockoutFrame.progress:SetText(format("0/%d", size))
+    end
+
+    local nConsecutiveFailures = 0
 
     for i = 1, size do
         if abortScan then
+            TSP:ChatMessage("Scan aborted")
             abortScan = nil
             return
         end
@@ -123,13 +130,24 @@ local function StartScan(now, size)
             else
                 data[itemID].when = now
             end
+            nConsecutiveFailures = 0
+        else
+            nConsecutiveFailures = nConsecutiveFailures + 1
+            if nConsecutiveFailures > 100 then
+                abortScan = true
+            end
         end
 
+        -- This modulus should be at least NUM_AUCTION_ITEMS_PER_PAGE (50)
+
         if i % 1000 == 0 then
-            lockoutFrame.progress:SetText(format('%d/%d', i, size))
+            if lockoutFrame and lockoutFrame:IsShown() then
+                lockoutFrame.progress:SetText(format("%d/%d", i, size))
+            end
             coroutine.yield()
         end
     end
+    TSP:ChatMessage('Scan completed, %d items scanned.', size)
 end
 
 local function OnUpdate(self, elapsed)
@@ -144,9 +162,12 @@ local function OnUpdate(self, elapsed)
         self:SetScript('OnUpdate', nil)
         self.thread = nil
         self.totalElapsed = nil
-        UnlockBlizzard()
+        if CanSendAuctionQuery() then
+            QueryAuctionItems('xyzzy', nil, nil, 0, nil, nil, false, false, nil)
+        else
+            UnlockBlizzard()
+        end
     else
-        TSP:ChatMessage('Scheduling thread')
         local t, e = coroutine.resume(self.thread)
         if t == false then
             TSP:ChatMessage(e)
@@ -157,38 +178,33 @@ end
 local function AuctionItemListUpdate(self)
     local batchSize, totalItems = GetNumAuctionItems('list')
 
-    if batchSize == 0 or batchSize ~= totalItems then
-        TSP:ChatMessage('Empty or non-getall scan found, ignoring')
-        -- we only support getall scans
+    -- A dummy 0 result search is used to trigger the end of the scan
+    -- and re-enabling the Blizzard frame. A getall scan means we should
+    -- throw away all the other data
+
+    if batchSize ~= totalItems then
+        TSP:ChatMessage('Non-getall scan found')
+        UnlockBlizzard()
+        -- return
+    else
+        table.wipe(TSP.db.auctionData)
+    end
+
+    if batchSize == 0 then
         return
     end
 
-    -- You can't get another set of getall data within 15 minutes so all the
-    -- rest of the events are refinements of the getall. Or, something did
-    -- another search, in which case we're boned.
+    -- AUCTION_ITEM_LIST_UPDATE triggers on practically everything, and
+    -- multiple times. We can't do anything more useful so we just ignore
+    -- extra results while we're in the middle of doing something.
 
     if self.thread then
         return
     end
 
-    TSP.db.auctionData = TSP.db.auctionData or {}
-
-    local now = time()
-
-    TSP:ChatMessage('Creating thread')
-    self.thread = coroutine.create(function () StartScan(now, batchSize) end)
+    TSP:ChatMessage('Starting auction house data scan.')
+    self.thread = coroutine.create(function () StartScan(batchSize) end)
     self:SetScript('OnUpdate', OnUpdate)
-end
-
-local function OnEvent(self, event, ...)
-    if event == 'AUCTION_HOUSE_SHOW' then
-        self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE')
-    elseif event == 'AUCTION_HOUSE_CLOSED' then
-        abortScan = true
-        self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE')
-    elseif event == 'AUCTION_ITEM_LIST_UPDATE' then
-        AuctionItemListUpdate(self)
-    end
 end
 
 local function GetMinPrice(itemID)
@@ -201,34 +217,48 @@ function TSP:ScanAH()
     local canQuery, canQueryAll = CanSendAuctionQuery()
     if canQueryAll then
         LockoutBlizzard()
-        lockoutFrame.progress:SetText("Waiting for data")
         QueryAuctionItems('', nil, nil, 0, nil, nil, true, false, nil)
     end
 end
 
 
--- This is not a good test
+local function Init()
 
-if #TSP.valueFunctions == 1 then
-    AuctionHouseScanner:RegisterEvent('AUCTION_HOUSE_SHOW')
-    AuctionHouseScanner:RegisterEvent('AUCTION_HOUSE_CLOSED')
-    AuctionHouseScanner:SetScript('OnEvent', OnEvent)
+    -- This is not a good test
+    if #TSP.valueFunctions == 1 then
+        TSP.db.auctionData = TSP.db.auctionData or {}
 
-    table.insert(TSP.valueFunctions,
-                {
-                    ['name'] = 'TradeSkillPrice',
-                    ['func'] =  GetMinPrice,
-                })
-    table.insert(TSP.costFunctions,
-                {
-                    ['name'] = 'TradeSkillPrice',
-                    ['func'] =  GetMinPrice,
-                })
-else
-    -- Don't keep our old possibly stale data around
-    AuctionHouseScanner:RegisterEvent('ADDON_LOADED')
-    AuctionHouseScanner:SetScript('OnEvent', function (self, event, arg1)
-            if arg1 == modName then TSP.db.auctionData = nil end
-            self:UnregisterEvent('ADDON_LOADED')
-        end)
+        AuctionHouseScanner:RegisterEvent('AUCTION_HOUSE_SHOW')
+        AuctionHouseScanner:RegisterEvent('AUCTION_HOUSE_CLOSED')
+
+        table.insert(TSP.valueFunctions,
+                    {
+                        ['name'] = 'TradeSkillPrice',
+                        ['func'] =  GetMinPrice,
+                    })
+        table.insert(TSP.costFunctions,
+                    {
+                        ['name'] = 'TradeSkillPrice',
+                        ['func'] =  GetMinPrice,
+                    })
+    else
+        TSP.db.auctionData = nil
+    end
 end
+
+local function OnEvent(self, event, arg1)
+    if event == 'AUCTION_HOUSE_SHOW' then
+        self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE')
+    elseif event == 'AUCTION_HOUSE_CLOSED' then
+        abortScan = true
+        self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE')
+    elseif event == 'AUCTION_ITEM_LIST_UPDATE' then
+        AuctionItemListUpdate(self)
+    elseif event == 'ADDON_LOADED' and arg1 == modName then
+        self:UnregisterEvent('ADDON_LOADED')
+        Init()
+    end
+end
+
+AuctionHouseScanner:RegisterEvent('ADDON_LOADED')
+AuctionHouseScanner:SetScript('OnEvent', OnEvent)
