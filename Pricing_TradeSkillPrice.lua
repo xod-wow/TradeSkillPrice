@@ -187,6 +187,7 @@ local function AuctionItemListUpdate(self)
         -- the getall seems to trigger returning the data twice, so we
         -- guard against seeing it again too soon, as it can only happen
         -- every 900 seconds.
+        TSP:ChatMessage('Duplicate? %d %d', batchSize, totalItems)
         return
     else
         lastGetAllTime = time()
@@ -202,13 +203,10 @@ local function AuctionItemListUpdate(self)
     -- extra results while we're in the middle of doing something.
 
     if self.thread then
-        TSP:ChatMessage('Duplicate? %d %d', batchSize, totalItems)
         return
-    else
-        TSP:ChatMessage('New? %d %d', batchSize, totalItems)
     end
 
-    TSP:ChatMessage('Starting auction house data scan.')
+    TSP:ChatMessage('Starting auction house data scan of %d auctions', batchSize)
     self.thread = coroutine.create(function () StartScan(batchSize) end)
     self:SetScript('OnUpdate', OnUpdate)
 end
