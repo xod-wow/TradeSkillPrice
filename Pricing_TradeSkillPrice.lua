@@ -262,6 +262,7 @@ end
 local function OnEvent(self, event, arg1)
     if event == 'AUCTION_HOUSE_SHOW' then
         self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE')
+        CreateScanButton()
     elseif event == 'AUCTION_HOUSE_CLOSED' then
         abortScan = true
         self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE')
@@ -270,8 +271,7 @@ local function OnEvent(self, event, arg1)
     elseif event == 'ADDON_LOADED' then
         if arg1 == modName then
             Init()
-        elseif arg1 == 'Blizzard_AuctionUI' then
-            CreateScanButton()
+            self:UnregisterEvent('ADDON_LOADED')
         end
     end
 end
