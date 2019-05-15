@@ -114,22 +114,23 @@ GetItemCostRecursive = function (itemID, seen)
         return
     end
 
+    seen[itemID] = true
+
     if itemCostCache[itemID] ~= nil then
         return unpack(itemCostCache[itemID])
     end
 
     local minCost, minCostSource
 
-    for _,f in ipairs(TradeSkillPrice.costFunctions) do
-        local c, s = f.func(itemID)
+    for _,recipeID in ipairs(itemRecipesCache[itemID] or {}) do
+        local c, s = GetRecipeCostRecursive(recipeID, seen)
         if c and (minCost == nil or c < minCost) then
             minCost, minCostSource = c, s
         end
     end
 
-    seen[itemID] = true
-    for _,recipeID in ipairs(itemRecipesCache[itemID] or {}) do
-        local c, s = GetRecipeCostRecursive(recipeID, seen)
+    for _,f in ipairs(TradeSkillPrice.costFunctions) do
+        local c, s = f.func(itemID)
         if c and (minCost == nil or c < minCost) then
             minCost, minCostSource = c, s
         end
