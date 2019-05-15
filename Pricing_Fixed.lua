@@ -18,12 +18,12 @@
 ----------------------------------------------------------------------------]]--
 
 local function Cost(itemID)
-    if TSP.db.fixedPrice and TSP.db.fixedPrice[itemID] then
-        return TSP.db.fixedPrice[itemID], "f"
+    if TradeSkillPrice.db.fixedPrice and TradeSkillPrice.db.fixedPrice[itemID] then
+        return TradeSkillPrice.db.fixedPrice[itemID], "f"
     end
 end
 
-table.insert(TSP.costFunctions,
+table.insert(TradeSkillPrice.costFunctions,
             {
                 ['name'] = 'Fixed',
                 ['func'] = Cost

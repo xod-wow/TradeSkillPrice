@@ -25,12 +25,12 @@ local AuctionHouseScanner = CreateFrame('Frame')
 local lockoutFrame, needReregister
 
 local function CreateScanButton()
-    if AuctionFrameBrowse and not TSPAHScanButton then
-        local b = CreateFrame('Button', 'TSPAHScanButton', AuctionFrameBrowse, 'UIPanelButtonNoTooltipResizeToFitTemplate')
+    if AuctionFrameBrowse and not TradeSkillPriceAHScanButton then
+        local b = CreateFrame('Button', 'TradeSkillPriceAHScanButton', AuctionFrameBrowse, 'UIPanelButtonNoTooltipResizeToFitTemplate')
         b:SetPoint('RIGHT', BrowseSearchButton, 'LEFT', -5, 0)
         b:SetText('TSP Scan')
         b:Show()
-        b:SetScript('OnClick', function () TSP:ScanAH() end)
+        b:SetScript('OnClick', function () TradeSkillPrice:ScanAH() end)
     end
 end
 
@@ -93,7 +93,7 @@ local function StartScan(size)
         minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
         ownerFullName, saleStatus, itemID, hasAllInfo
 
-    local data = TSP.db.auctionData
+    local data = TradeSkillPrice.db.auctionData
 
     if lockoutFrame and lockoutFrame:IsShown() then
         lockoutFrame.progress:SetText(format("0/%d", size))
@@ -103,7 +103,7 @@ local function StartScan(size)
 
     for i = 1, size do
         if abortScan then
-            TSP:ChatMessage("Scan aborted")
+            TradeSkillPrice:ChatMessage("Scan aborted")
             abortScan = nil
             return
         end
@@ -157,7 +157,7 @@ local function StartScan(size)
             coroutine.yield()
         end
     end
-    TSP:ChatMessage('Scan completed, %d items scanned.', size)
+    TradeSkillPrice:ChatMessage('Scan completed, %d items scanned.', size)
 end
 
 local function OnUpdate(self, elapsed)
@@ -177,7 +177,7 @@ local function OnUpdate(self, elapsed)
     else
         local t, e = coroutine.resume(self.thread)
         if t == false then
-            TSP:ChatMessage(e)
+            TradeSkillPrice:ChatMessage(e)
         end
     end
 end
@@ -190,7 +190,7 @@ local function AuctionItemListUpdate(self)
     -- throw away all the other data
 
     if batchSize ~= totalItems then
-        TSP:ChatMessage('Non-getall scan found')
+        TradeSkillPrice:ChatMessage('Non-getall scan found')
         UnlockBlizzard()
         -- return
     elseif time() < lastGetAllTime + 890 then
@@ -200,7 +200,7 @@ local function AuctionItemListUpdate(self)
         return
     else
         lastGetAllTime = time()
-        table.wipe(TSP.db.auctionData)
+        table.wipe(TradeSkillPrice.db.auctionData)
     end
 
     if batchSize == 0 then
@@ -215,18 +215,18 @@ local function AuctionItemListUpdate(self)
         return
     end
 
-    TSP:ChatMessage('Starting auction house data scan of %d auctions', batchSize)
+    TradeSkillPrice:ChatMessage('Starting auction house data scan of %d auctions', batchSize)
     self.thread = coroutine.create(function () StartScan(batchSize) end)
     self:SetScript('OnUpdate', OnUpdate)
 end
 
 local function GetMinPrice(itemID)
-    if TSP.db.auctionData and TSP.db.auctionData[itemID] then
-        return TSP.db.auctionData[itemID].price, "a"
+    if TradeSkillPrice.db.auctionData and TradeSkillPrice.db.auctionData[itemID] then
+        return TradeSkillPrice.db.auctionData[itemID].price, "a"
     end
 end
 
-function TSP:ScanAH()
+function TradeSkillPrice:ScanAH()
     local canQuery, canQueryAll = CanSendAuctionQuery()
     if canQueryAll then
         LockoutBlizzard()
@@ -237,25 +237,25 @@ end
 local function Init()
 
     -- This is not a good test
-    if #TSP.valueFunctions == 1 then
-        TSP.db.auctionData = TSP.db.auctionData or {}
+    if #TradeSkillPrice.valueFunctions == 1 then
+        TradeSkillPrice.db.auctionData = TradeSkillPrice.db.auctionData or {}
 
         AuctionHouseScanner:RegisterEvent('AUCTION_HOUSE_SHOW')
         AuctionHouseScanner:RegisterEvent('AUCTION_HOUSE_CLOSED')
 
-        table.insert(TSP.valueFunctions,
+        table.insert(TradeSkillPrice.valueFunctions,
                     {
                         ['name'] = 'TradeSkillPrice',
                         ['func'] =  GetMinPrice,
                     })
-        table.insert(TSP.costFunctions,
+        table.insert(TradeSkillPrice.costFunctions,
                     {
                         ['name'] = 'TradeSkillPrice',
                         ['func'] =  GetMinPrice,
                     })
 
     else
-        TSP.db.auctionData = nil
+        TradeSkillPrice.db.auctionData = nil
     end
 end
 

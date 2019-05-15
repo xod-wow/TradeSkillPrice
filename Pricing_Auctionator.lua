@@ -110,17 +110,17 @@ local function Cost(itemID)
 end
 
 if Atr_GetAuctionPrice then
-    table.insert(TSP.valueFunctions,
+    table.insert(TradeSkillPrice.valueFunctions,
                 {
                     ['name'] = 'Auctionator',
                     ['func'] =  AuctionValue
                 })
-    table.insert(TSP.valueFunctions,
+    table.insert(TradeSkillPrice.valueFunctions,
                 {
                     ['name'] = 'Auctionator Disenchant',
                     ['func'] = DisenchantValue
                 })
-    table.insert(TSP.costFunctions,
+    table.insert(TradeSkillPrice.costFunctions,
                 {
                     ['name'] = 'Auctionator',
                     ['func'] = Cost
@@ -129,6 +129,6 @@ if Atr_GetAuctionPrice then
     Atr_RegisterFor_DBupdated(
         function ()
             RebuildIDCache()
-            TSP:RecalculatePrices()
+            TradeSkillPrice:RecalculatePrices()
         end)
 end

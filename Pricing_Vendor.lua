@@ -19,9 +19,9 @@
 
 
 local function GetVendorCost(itemID)
-    TSP.db.merchantItems = TSP.db.merchantItems or {}
-    if TSP.db.merchantItems[itemID] then
-        return TSP.db.merchantItems[itemID], "v"
+    TradeSkillPrice.db.merchantItems = TradeSkillPrice.db.merchantItems or {}
+    if TradeSkillPrice.db.merchantItems[itemID] then
+        return TradeSkillPrice.db.merchantItems[itemID], "v"
     end
 end
 
@@ -31,7 +31,7 @@ local function GetVendorValue(itemID)
 end
 
 local function ScanMerchantForReagents()
-    TSP.db.merchantItems = TSP.db.merchantItems or {}
+    TradeSkillPrice.db.merchantItems = TradeSkillPrice.db.merchantItems or {}
 
     local _, price, numAvailable, isPurchasable, currencyID
 
@@ -41,18 +41,18 @@ local function ScanMerchantForReagents()
 
         if price > 0 and numAvailable < 0 and isPurchasable and not currencyID then
             if select(12, GetItemInfo(id)) == 7 then
-                TSP.db.merchantItems[id] = price
+                TradeSkillPrice.db.merchantItems[id] = price
             end
         end
     end
 end
 
-table.insert(TSP.costFunctions,
+table.insert(TradeSkillPrice.costFunctions,
             {
                 ['name'] = TRANSMOG_SOURCE_3,
                 ['func'] = GetVendorCost
             })
-table.insert(TSP.valueFunctions, { 
+table.insert(TradeSkillPrice.valueFunctions, { 
                 ['name'] = TRANSMOG_SOURCE_3,
                 ['func'] = GetVendorValue
             })

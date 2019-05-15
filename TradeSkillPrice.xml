@@ -19,7 +19,7 @@
 
 -->
 
-<Button name="TSPButtonTemplate" hidden="false" virtual="true">
+<Button name="TradeSkillPriceButtonTemplate" hidden="false" virtual="true">
     <Size x="23" y="16"/>
 
     <Layers>

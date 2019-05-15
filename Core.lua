@@ -19,10 +19,10 @@
 
 local modName, modTable = ...
 
-TSP = CreateFrame("Frame", "TSP")
-TSP.version = GetAddOnMetadata(modName, "Version")
-TSP.costFunctions = {}
-TSP.valueFunctions = {}
+TradeSkillPrice = CreateFrame("Frame", "TradeSkillPrice")
+TradeSkillPrice.version = GetAddOnMetadata(modName, "Version")
+TradeSkillPrice.costFunctions = {}
+TradeSkillPrice.valueFunctions = {}
 
 local defaultConfig = {
     vendorOverride = {},
@@ -37,12 +37,12 @@ local function GetActiveChatFrame()
     return DEFAULT_CHAT_FRAME
 end
 
-function TSP:ChatMessage(...)
+function TradeSkillPrice:ChatMessage(...)
     local msg = format(...)
     GetActiveChatFrame():AddMessage("|cff80d060"..msg.."|r")
 end
 
-function TSP:FormatMoneyForTooltip(money)
+function TradeSkillPrice:FormatMoneyForTooltip(money)
     local g = math.floor(money/10000)
     local s = math.fmod(math.floor(money/100),100)
     local c = math.fmod(money,100)
@@ -58,11 +58,11 @@ function TSP:FormatMoneyForTooltip(money)
 
 end
 
-function TSP:FormatSource(source)
+function TradeSkillPrice:FormatSource(source)
     return "|cffaaaaff" .. source .. "|r"
 end
 
-function TSP:FormatMoney(moneyString, highlight)
+function TradeSkillPrice:FormatMoney(moneyString, highlight)
     if not moneyString then
         return nil, "?"
     end
@@ -127,24 +127,24 @@ function TSP:FormatMoney(moneyString, highlight)
     end
 end
 
-function TSP.ShowCostTooltip(button)
+function TradeSkillPrice.ShowCostTooltip(button)
     GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
     GameTooltip:ClearLines()
     GameTooltip:Show()
 end
 
-function TSP.HideTooltip(button)
+function TradeSkillPrice.HideTooltip(button)
     if GameTooltip:GetOwner() == button then
         GameTooltip:Hide()
     end
 end
 
-function TSP.SetUpHeader(button, textWidth, tradeSkillInfo)
+function TradeSkillPrice.SetUpHeader(button, textWidth, tradeSkillInfo)
     button.lswCost:Hide()
     button.lswValue:Hide()
 end
 
-function TSP.SetUpRecipe(button, textWidth, tradeSkillInfo)
+function TradeSkillPrice.SetUpRecipe(button, textWidth, tradeSkillInfo)
 
     local width = textWidth
                     - button.lswValue:GetWidth()
@@ -171,20 +171,20 @@ function TSP.SetUpRecipe(button, textWidth, tradeSkillInfo)
 
     local recipeID = tradeSkillInfo.recipeID
 
-    local costAmount, costSource = TSP:GetRecipeCost(recipeID)
-    local valueAmount, valueSource = TSP:GetRecipeValue(recipeID)
+    local costAmount, costSource = TradeSkillPrice:GetRecipeCost(recipeID)
+    local valueAmount, valueSource = TradeSkillPrice:GetRecipeValue(recipeID)
     local highlight = (costAmount or 0) < (valueAmount or 0)
 
     if valueAmount then
-        local valueText = TSP:FormatMoney(valueAmount, highlight)
-        local sourceText = TSP:FormatSource(valueSource)
+        local valueText = TradeSkillPrice:FormatMoney(valueAmount, highlight)
+        local sourceText = TradeSkillPrice:FormatSource(valueSource)
         button.lswValue.Text:SetText(valueText .. sourceText)
     else
         button.lswValue.Text:SetText('--')
     end
 
     if costAmount then
-        local costText = TSP:FormatMoney(costAmount)
+        local costText = TradeSkillPrice:FormatMoney(costAmount)
         button.lswCost.Text:SetText(costText)
     else
         button.lswCost.Text:SetText('--')
@@ -194,53 +194,53 @@ function TSP.SetUpRecipe(button, textWidth, tradeSkillInfo)
     button.lswCost:Show()
 end
 
-function TSP:CreateDynamicButtons(button)
+function TradeSkillPrice:CreateDynamicButtons(button)
     local height = button:GetHeight()
 
     if not button.lswCost then
-        button.lswCost = CreateFrame("Button", nil, button, "TSPButtonTemplate")
+        button.lswCost = CreateFrame("Button", nil, button, "TradeSkillPriceButtonTemplate")
         button.lswCost:SetSize(40, height)
         button.lswCost:SetPoint("RIGHT", -4, 0)
-        -- button.lswCost:SetScript("OnEnter", TSP.ShowCostTooltip)
-        -- button.lswCost:SetScript("OnLeave", TSP.HideTooltip)
+        -- button.lswCost:SetScript("OnEnter", TradeSkillPrice.ShowCostTooltip)
+        -- button.lswCost:SetScript("OnLeave", TradeSkillPrice.HideTooltip)
 
-        button.lswValue = CreateFrame("Button", nil, button, "TSPButtonTemplate")
+        button.lswValue = CreateFrame("Button", nil, button, "TradeSkillPriceButtonTemplate")
         button.lswValue:SetSize(40, height)
         button.lswValue:SetPoint("RIGHT", button.lswCost, "LEFT", 0, 0)
 
-        hooksecurefunc(button, "SetUpHeader", TSP.SetUpHeader)
-        hooksecurefunc(button, "SetUpRecipe", TSP.SetUpRecipe)
+        hooksecurefunc(button, "SetUpHeader", TradeSkillPrice.SetUpHeader)
+        hooksecurefunc(button, "SetUpRecipe", TradeSkillPrice.SetUpRecipe)
     end
 end
 
-function TSP:CreateAllDynamicButtons()
+function TradeSkillPrice:CreateAllDynamicButtons()
     for i, button in ipairs(TradeSkillFrame.RecipeList.buttons) do
-        TSP:CreateDynamicButtons(button)
+        TradeSkillPrice:CreateDynamicButtons(button)
     end
 end
 
-function TSP:RefreshRecipeList()
+function TradeSkillPrice:RefreshRecipeList()
     if TradeSkillFrame and TradeSkillFrame:IsShown() then
         TradeSkillFrame.RecipeList:Refresh()
     end
 end
 
-function TSP:RecalculatePrices()
+function TradeSkillPrice:RecalculatePrices()
     self:ClearItemCostCache()
     self:RefreshRecipeList()
 end
 
-function TSP:Initialize()
+function TradeSkillPrice:Initialize()
     TradeSkillPriceDB = TradeSkillPriceDB or { }
     self.db = TradeSkillPriceDB
     self.initialized = true
 end
 
-TSP:RegisterEvent("ADDON_LOADED")
-TSP:RegisterEvent("TRADE_SKILL_SHOW")
-TSP:RegisterEvent("TRADE_SKILL_DATA_SOURCE_CHANGED")
+TradeSkillPrice:RegisterEvent("ADDON_LOADED")
+TradeSkillPrice:RegisterEvent("TRADE_SKILL_SHOW")
+TradeSkillPrice:RegisterEvent("TRADE_SKILL_DATA_SOURCE_CHANGED")
 
-TSP:SetScript("OnEvent",
+TradeSkillPrice:SetScript("OnEvent",
     function(self, event, arg1, arg2)
         if event == "TRADE_SKILL_SHOW" then
             self:CreateAllDynamicButtons()

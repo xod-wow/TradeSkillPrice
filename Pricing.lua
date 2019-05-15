@@ -21,9 +21,9 @@ local recipeInfoCache = { }
 local itemRecipesCache = { }
 local itemCostCache =  { }
 
-TSP._recipeInfoCache = recipeInfoCache
-TSP._itemRecipesCache = itemRecipesCache
-TSP._itemCostCache = itemCostCache
+-- TradeSkillPrice._recipeInfoCache = recipeInfoCache
+-- TradeSkillPrice._itemRecipesCache = itemRecipesCache
+-- TradeSkillPrice._itemCostCache = itemCostCache
 
 local function UpdateRecipeInfoCacheObject(object)
     if object.type == 'header' or object.type == 'subheader' then
@@ -41,7 +41,7 @@ local function UpdateRecipeInfoCacheObject(object)
     object.itemID = GetItemInfoFromHyperlink(object.itemLink)
 
     if not object.itemID then
-        object.itemID = TSP.scrollData[object.recipeID]
+        object.itemID = TradeSkillPrice.scrollData[object.recipeID]
         object.numCreated = 1
     else
         local a, b = C_TradeSkillUI.GetRecipeNumItemsProduced(object.recipeID)
@@ -68,11 +68,11 @@ local function UpdateRecipeInfoCacheObject(object)
     end
 end
 
-function TSP:ClearItemCostCache()
+function TradeSkillPrice:ClearItemCostCache()
     table.wipe(itemCostCache)
 end
 
-function TSP:UpdateRecipeInfoCache()
+function TradeSkillPrice:UpdateRecipeInfoCache()
     if C_TradeSkillUI.IsTradeSkillLinked() then
         return
     end
@@ -120,7 +120,7 @@ GetItemCostRecursive = function (itemID, seen)
 
     local minCost, minCostSource
 
-    for _,f in ipairs(TSP.costFunctions) do
+    for _,f in ipairs(TradeSkillPrice.costFunctions) do
         local c, s = f.func(itemID)
         if c and (minCost == nil or c < minCost) then
             minCost, minCostSource = c, s
@@ -139,25 +139,25 @@ GetItemCostRecursive = function (itemID, seen)
     return minCost, minCostSource
 end
 
-function TSP:GetRecipeItem(recipeID)
+function TradeSkillPrice:GetRecipeItem(recipeID)
     local itemLink = C_TradeSkillUI.GetRecipeItemLink(recipeID)
     local itemID = GetItemInfoFromHyperlink(itemLink)
-                    or TSP.scrollData[recipeID]
+                    or TradeSkillPrice.scrollData[recipeID]
     return itemID
 end
 
-function TSP:GetItemCost(itemID)
+function TradeSkillPrice:GetItemCost(itemID)
     return GetItemCostRecursive(itemID, {})
 end
 
-function TSP:GetRecipeCost(recipeID)
+function TradeSkillPrice:GetRecipeCost(recipeID)
     return GetRecipeCostRecursive(recipeID, {})
 end
 
-function TSP:GetItemValue(itemID)
+function TradeSkillPrice:GetItemValue(itemID)
     local value, source
 
-    for _,f in ipairs(TSP.valueFunctions) do
+    for _,f in ipairs(TradeSkillPrice.valueFunctions) do
         local v, s = f.func(itemID)
         if v and v > (value or 0) then
             value, source = v, s
@@ -167,7 +167,7 @@ function TSP:GetItemValue(itemID)
     return value, source
 end
 
-function TSP:GetRecipeValue(recipeID)
+function TradeSkillPrice:GetRecipeValue(recipeID)
     local item = self:GetRecipeItem(recipeID)
     if item then
         return self:GetItemValue(item)

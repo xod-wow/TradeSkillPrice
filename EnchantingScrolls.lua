@@ -40,7 +40,7 @@ local function ScanPartial(min, max)
             -- matching them by name
             local allIDs = recipeSpellsByID[itemSpellID]
             for _,spellID in ipairs(allIDs) do
-                TSP.db.scrollData = TSP.db.scrollData
+                TradeSkillPrice.db.scrollData = TradeSkillPrice.db.scrollData
                         .. "\n" ..
                         format("    [%06d] = %06d, -- %s", spellID, itemID, itemName)
             end
@@ -95,7 +95,7 @@ local function OnUpdate(self, elapsed)
         self:SetScript("OnUpdate", nil)
         self.thread = nil
         self.totalElapsed = nil
-        TSP.db.scrollData = TSP.db.scrollData .. "\n}\n"
+        TradeSkillPrice.db.scrollData = TradeSkillPrice.db.scrollData .. "\n}\n"
     else
         local t, e = coroutine.resume(self.thread)
         if t == false then
@@ -109,20 +109,20 @@ end
 -- the enchanting scrolls cast the rank 1 version of the spell, but there's
 -- no reason to believe that will always be the case.
 
-function TSP:ScanForScrolls()
+function TradeSkillPrice:ScanForScrolls()
     if not TradeSkillFrame or not TradeSkillFrame:IsVisible() then
         print('Open the enchanting tradeskill first.')
         return
     end
 
-    TSP.db.scrollData = "TSP.scrollData = {"
+    TradeSkillPrice.db.scrollData = "TradeSkillPrice.scrollData = {"
     scanFrame.thread = coroutine.create(Scan)
     scanFrame:SetScript("OnUpdate", OnUpdate)
 end
 
 -- spellid, itemid
 
-TSP.scrollData = {
+TradeSkillPrice.scrollData = {
     [007418] = 038679, -- Enchant Bracer - Minor Health
     [007420] = 038766, -- Enchant Chest - Minor Health
     [007426] = 038767, -- Enchant Chest - Minor Absorption
