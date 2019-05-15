@@ -24,14 +24,13 @@ local abortScan, lastGetAllTime = nil, 0
 local AuctionHouseScanner = CreateFrame('Frame')
 local lockoutFrame, needReregister
 
-local function CreateScanButton(parent)
-    if not TSPAHScanButton then
-        local b = CreateFrame('Button', 'TSPAHScanButton', parent, 'UIPanelButtonTemplate')
-        b:SetSize(80, 22)
+local function CreateScanButton()
+    if AuctionFrameBrowse and not TSPAHScanButton then
+        local b = CreateFrame('Button', 'TSPAHScanButton', AuctionFrameBrowse, 'UIPanelButtonNoTooltipResizeToFitTemplate')
         b:SetPoint('RIGHT', BrowseSearchButton, 'LEFT', -5, 0)
-        b:SetText('Full Scan')
+        b:SetText('TSP Scan')
         b:Show()
-        -- b:SetScript('OnClick', function () TSP:ScanAH() end)
+        b:SetScript('OnClick', function () TSP:ScanAH() end)
     end
 end
 
@@ -195,10 +194,9 @@ local function AuctionItemListUpdate(self)
         UnlockBlizzard()
         -- return
     elseif time() < lastGetAllTime + 890 then
-        -- the getall seems to trigger returning the data twice, so we
-        -- guard against seeing it again too soon, as it can only happen
-        -- every 900 seconds.
-        TSP:ChatMessage('Duplicate? %d %d', batchSize, totalItems)
+        -- the getall seems to trigger returning the data about a million
+        -- times, so guard against seeing it again too soon, as it can only
+        -- happen once every 900 seconds.
         return
     else
         lastGetAllTime = time()
