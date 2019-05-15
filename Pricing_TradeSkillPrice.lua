@@ -24,6 +24,17 @@ local abortScan, lastGetAllTime = nil, 0
 local AuctionHouseScanner = CreateFrame('Frame')
 local lockoutFrame, needReregister
 
+local function CreateScanButton(parent)
+    if not TSPAHScanButton then
+        local b = CreateFrame('Button', 'TSPAHScanButton', parent, 'UIPanelButtonTemplate')
+        b:SetSize(80, 22)
+        b:SetPoint('RIGHT', BrowseSearchButton, 'LEFT', -5, 0)
+        b:SetText('Full Scan')
+        b:Show()
+        -- b:SetScript('OnClick', function () TSP:ScanAH() end)
+    end
+end
+
 local function CreateLockoutFrame()
 
     local f = CreateFrame('Frame', nil, AuctionFrame)
@@ -52,7 +63,7 @@ local function CreateLockoutFrame()
     return f
 end
 
-function LockoutBlizzard()
+local function LockoutBlizzard()
     if not AuctionFrame then return end
 
     lockoutFrame = lockoutFrame or CreateLockoutFrame()
@@ -63,7 +74,7 @@ function LockoutBlizzard()
     needReregister = true
 end
 
-function UnlockBlizzard()
+local function UnlockBlizzard()
     if not AuctionFrameBrowse then return end
 
     if lockoutFrame then
@@ -225,7 +236,6 @@ function TSP:ScanAH()
     end
 end
 
-
 local function Init()
 
     -- This is not a good test
@@ -245,6 +255,7 @@ local function Init()
                         ['name'] = 'TradeSkillPrice',
                         ['func'] =  GetMinPrice,
                     })
+
     else
         TSP.db.auctionData = nil
     end
@@ -258,9 +269,12 @@ local function OnEvent(self, event, arg1)
         self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE')
     elseif event == 'AUCTION_ITEM_LIST_UPDATE' then
         AuctionItemListUpdate(self)
-    elseif event == 'ADDON_LOADED' and arg1 == modName then
-        self:UnregisterEvent('ADDON_LOADED')
-        Init()
+    elseif event == 'ADDON_LOADED' then
+        if arg1 == modName then
+            Init()
+        elseif arg1 == 'Blizzard_AuctionUI' then
+            CreateScanButton()
+        end
     end
 end
 
