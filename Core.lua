@@ -128,9 +128,14 @@ function TradeSkillPrice:FormatMoney(moneyString, highlight)
 end
 
 function TradeSkillPrice.ShowCostTooltip(button)
-    GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
-    GameTooltip:ClearLines()
-    GameTooltip:Show()
+    if button.TooltipLines then
+        GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+        GameTooltip:ClearLines()
+        for _, line in ipairs(button.TooltipLines) do
+            GameTooltip:AddDoubleLine(unpack(line))
+        end
+        GameTooltip:Show()
+    end
 end
 
 function TradeSkillPrice.HideTooltip(button)
@@ -171,23 +176,27 @@ function TradeSkillPrice.SetUpRecipe(button, textWidth, tradeSkillInfo)
 
     local recipeID = tradeSkillInfo.recipeID
 
-    local costAmount, costSource = TradeSkillPrice:GetRecipeCost(recipeID)
-    local valueAmount, valueSource = TradeSkillPrice:GetRecipeValue(recipeID)
+    local costAmount, costSource, costLines = TradeSkillPrice:GetRecipeCost(recipeID)
+    local valueAmount, valueSource, valueLines = TradeSkillPrice:GetRecipeValue(recipeID)
     local highlight = (costAmount or 0) < (valueAmount or 0)
 
     if valueAmount then
         local valueText = TradeSkillPrice:FormatMoney(valueAmount, highlight)
         local sourceText = TradeSkillPrice:FormatSource(valueSource)
         button.lswValue.Text:SetText(valueText .. sourceText)
+        button.lswValue.TooltipLines = valueLines
     else
         button.lswValue.Text:SetText('--')
+        button.lswValue.TooltipText = nil
     end
 
     if costAmount then
         local costText = TradeSkillPrice:FormatMoney(costAmount)
         button.lswCost.Text:SetText(costText)
+        button.lswCost.TooltipLines = costLines
     else
         button.lswCost.Text:SetText('--')
+        button.lswValue.TooltipLines = nil
     end
 
     button.lswValue:Show()
@@ -201,8 +210,8 @@ function TradeSkillPrice:CreateDynamicButtons(button)
         button.lswCost = CreateFrame("Button", nil, button, "TradeSkillPriceButtonTemplate")
         button.lswCost:SetSize(40, height)
         button.lswCost:SetPoint("RIGHT", -4, 0)
-        -- button.lswCost:SetScript("OnEnter", TradeSkillPrice.ShowCostTooltip)
-        -- button.lswCost:SetScript("OnLeave", TradeSkillPrice.HideTooltip)
+        button.lswCost:SetScript("OnEnter", TradeSkillPrice.ShowCostTooltip)
+        button.lswCost:SetScript("OnLeave", TradeSkillPrice.HideTooltip)
 
         button.lswValue = CreateFrame("Button", nil, button, "TradeSkillPriceButtonTemplate")
         button.lswValue:SetSize(40, height)
