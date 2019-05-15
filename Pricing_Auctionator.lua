@@ -60,23 +60,23 @@ local function AuctionValue(itemID)
     --  1. It works before GetItemInfo returns id -> name data
     --  2. It picks up "<item> of the <suffix>" creations
 
+    local price
+
     if IDCache[itemID] then
-        local price, count
+        -- This is picking the minimum price, because that's what
+        -- Atr_GetAuctionPrice does. It could do the mean price.
         for itemName in pairs(IDCache[itemID]) do
             local p = Atr_GetAuctionPrice(itemName)
-            if p then
-                price = (price or 0) + p
-                count = (count or 0) + 1
+            if p and (price == nil or p < price) then
+                price = p
             end
         end
-        if price then
-            return price/count, "a"
-        end
     else
-        local price = Atr_GetAuctionPrice(itemID)
-        if price then
-            return price, "a"
-        end
+        price = Atr_GetAuctionPrice(itemID)
+    end
+
+    if price then
+        return price, "a"
     end
 end
 
