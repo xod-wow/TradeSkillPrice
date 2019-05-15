@@ -20,26 +20,28 @@
 local modName, modTable = ...
 
 local abortScan
-local unregisteredFrames = {}
 
 local scanner = CreateFrame('Frame')
+local lockoutFrame
 
-function LockoutOthers()
-    local frames = { GetFramesRegisteredForEvent('AUCTION_ITEM_LIST_UPDATE') }
-    for _,f in ipairs(frames) do
-        if f ~= scanner then
-            table.insert(unregisteredFrames, f)
-            f:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE')
-        end
+function LockoutBlizzard()
+    if not lockoutFrame then
+        lockoutFrame = CreateFrame('Frame', nil, AuctionFrameBrowse)
+        lockoutFrame:SetFrameStrata('OVERLAY')
+        lockoutFrame:SetAllPoints()
+        lockoutFrame.texture = lockoutFrame:CreateTexture(nil, 'ARTWORK')
+        lockoutFrame.texture:setAllPoints()
+        lockoutFrame.texture:SetColorTexture(0, 0.5, 0, 0.5)
     end
+
+    lockoutFrame:Show()
+    AuctionFrameBrowse:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE')
 end
 
-function UnlockOthers()
+function UnlockBlizzard()
     QueryAuctionItems('xyzzy', nil, nil, 0, nil, nil, false, false, nil)
-    for _,f in ipairs(unregisteredFrames) do
-        f:RegisterEvent('AUCTION_ITEM_LIST_UPDATE')
-    end
-    table.wipe(unregisteredFrames)
+    lockoutFrame:Hide()
+    AuctionFrameBrowse:RegisterEvent('AUCTION_ITEM_LIST_UPDATE')
 end
 
 local function StartScan(now, size)
@@ -109,7 +111,7 @@ local function OnUpdate(self, elapsed)
         self:SetScript('OnUpdate', nil)
         self.thread = nil
         self.totalElapsed = nil
-        UnlockOthers()
+        UnlockBlizzard()
     else
         TSP:ChatMessage('Scheduling thread')
         local t, e = coroutine.resume(self.thread)
@@ -165,7 +167,7 @@ end
 function TSP:ScanAH()
     local canQuery, canQueryAll = CanSendAuctionQuery()
     if canQueryAll then
-        LockoutOthers()
+        LockoutBlizzard()
         QueryAuctionItems('', nil, nil, 0, nil, nil, true, false, nil)
     end
 end
