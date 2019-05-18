@@ -51,7 +51,7 @@ local function RebuildIDCache()
     end
 end
 
-local function AuctionValue(itemID)
+local function AuctionValue(itemID, count)
     if next(IDCache) == nil then
         RebuildIDCache()
     end
@@ -76,11 +76,11 @@ local function AuctionValue(itemID)
     end
 
     if price then
-        return price, "a"
+        return price * count, "a"
     end
 end
 
-local function DisenchantValue(itemID)
+local function DisenchantValue(itemID, count)
     local price
 
     -- Assumption is that if an item has multiple variants that they
@@ -93,10 +93,10 @@ local function DisenchantValue(itemID)
         price = Atr_GetDisenchantValue(itemID)
     end
 
-    return price, "d"
+    return price * count, "d"
 end
 
-local function Cost(itemID)
+local function Cost(itemID, count)
     local price
     if IDCache[itemID] then
         local itemName = next(IDCache[itemID])
@@ -105,7 +105,7 @@ local function Cost(itemID)
         price = Atr_GetAuctionPrice(itemID)
     end
     if price then
-        return price, "a"
+        return price * count, "a"
     end
 end
 

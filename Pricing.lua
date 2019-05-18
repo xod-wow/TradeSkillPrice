@@ -130,7 +130,7 @@ GetItemCostRecursive = function (itemID, seen)
     end
 
     for _,f in ipairs(TradeSkillPrice.costFunctions) do
-        local c, s = f.func(itemID)
+        local c, s = f.func(itemID, 1)
         if c and (minCost == nil or c < minCost) then
             minCost, minCostSource = c, s
         end
@@ -159,7 +159,7 @@ function TradeSkillPrice:GetItemValue(itemID)
     local value, source
 
     for _,f in ipairs(TradeSkillPrice.valueFunctions) do
-        local v, s = f.func(itemID)
+        local v, s = f.func(itemID, 1)
         if v and v > (value or 0) then
             value, source = v, s
         end

@@ -220,9 +220,9 @@ local function AuctionItemListUpdate(self)
     self:SetScript('OnUpdate', OnUpdate)
 end
 
-local function GetMinPrice(itemID)
+local function GetMinPrice(itemID, count)
     if TradeSkillPrice.db.auctionData and TradeSkillPrice.db.auctionData[itemID] then
-        return TradeSkillPrice.db.auctionData[itemID].price, "a"
+        return TradeSkillPrice.db.auctionData[itemID].price * count, "a"
     end
 end
 

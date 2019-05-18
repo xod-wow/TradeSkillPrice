@@ -17,9 +17,9 @@
 
 ----------------------------------------------------------------------------]]--
 
-local function Cost(itemID)
+local function Cost(itemID, count)
     if TradeSkillPrice.db.fixedPrice and TradeSkillPrice.db.fixedPrice[itemID] then
-        return TradeSkillPrice.db.fixedPrice[itemID], "f"
+        return TradeSkillPrice.db.fixedPrice[itemID] * count, "f"
     end
 end
 

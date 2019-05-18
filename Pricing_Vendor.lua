@@ -18,16 +18,16 @@
 ----------------------------------------------------------------------------]]--
 
 
-local function GetVendorCost(itemID)
+local function GetVendorCost(itemID, count)
     TradeSkillPrice.db.merchantItems = TradeSkillPrice.db.merchantItems or {}
     if TradeSkillPrice.db.merchantItems[itemID] then
-        return TradeSkillPrice.db.merchantItems[itemID], "v"
+        return TradeSkillPrice.db.merchantItems[itemID] * count, "v"
     end
 end
 
-local function GetVendorValue(itemID)
+local function GetVendorValue(itemID, count)
     local sellPrice = select(11, GetItemInfo(itemID))
-    return sellPrice, "v"
+    return sellPrice * count, "v"
 end
 
 local function ScanMerchantForReagents()
