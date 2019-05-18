@@ -20,7 +20,9 @@
 local function AuctionPrice(itemID, count)
     local info = {}
     TUJMarketInfo(itemID, info)
-    return info['recent'] * count
+    if info['recent'] then
+        return info['recent'] * count, "a"
+    end
 end
 
 if TUJMarketInfo then

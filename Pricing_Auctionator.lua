@@ -92,8 +92,9 @@ local function DisenchantValue(itemID, count)
     else
         price = Atr_GetDisenchantValue(itemID)
     end
-
-    return price * count, "d"
+    if price then
+        return price * count, "d"
+    end
 end
 
 local function Cost(itemID, count)

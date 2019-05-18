@@ -27,7 +27,9 @@ end
 
 local function GetVendorValue(itemID, count)
     local sellPrice = select(11, GetItemInfo(itemID))
-    return sellPrice * count, "v"
+    if sellPrice then
+        return sellPrice * count, "v"
+    end
 end
 
 local function ScanMerchantForReagents()
