@@ -103,7 +103,7 @@ GetRecipeCostRecursive = function (recipeID, seen)
             return
         end
     end
-    if cost ~= nil then
+    if cost then
         return cost / object.numCreated, "r"
     end
 end
@@ -136,8 +136,10 @@ GetItemCostRecursive = function (itemID, seen)
         end
     end
 
-    itemCostCache[itemID] = { minCost, minCostSource }
-    return minCost, minCostSource
+    if minCost then
+        itemCostCache[itemID] = { minCost, minCostSource }
+        return minCost, minCostSource
+    end
 end
 
 function TradeSkillPrice:GetRecipeItem(recipeID)
