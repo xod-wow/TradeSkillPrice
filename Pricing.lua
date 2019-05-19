@@ -83,14 +83,31 @@ function TradeSkillPrice:UpdateRecipeInfoCache()
     end
 end
 
+local function GetMinItemBuyCost(itemID, count)
+    local minCost, minCostSource
+
+    for _,f in ipairs(TradeSkillPrice.costFunctions) do
+        local c, s = f.func(itemID, count)
+        if c and (minCost == nil or c < minCost) then
+            minCost, minCostSource = c, s
+        end
+    end
+end
+
 local GetItemCostRecursive, GetRecipeCostRecursive
 
 GetRecipeCostRecursive = function (recipeID, seen)
-    local object = recipeInfoCache[recipeID]
+    -- Can't depend on ourself, definitely not a winning strategy
+    if seen[recipeID] ~= nil then
+        return
+    end
 
+    local object = recipeInfoCache[recipeID]
     if not object.learned then
         return nil
     end
+
+    seen[recipeID] = true
 
     local cost, source
     for itemID, count in pairs(object.reagents) do
@@ -109,28 +126,14 @@ GetRecipeCostRecursive = function (recipeID, seen)
 end
 
 GetItemCostRecursive = function (itemID, seen)
-    -- Can't depend on ourself, definitely not a winning strategy
-    if seen[itemID] ~= nil then
-        return
-    end
-
-    seen[itemID] = true
-
     if itemCostCache[itemID] ~= nil then
         return unpack(itemCostCache[itemID])
     end
 
-    local minCost, minCostSource
+    local minCost, minCostSource = GetMinItemBuyCost(itemID, 1)
 
     for _,recipeID in ipairs(itemRecipesCache[itemID] or {}) do
         local c, s = GetRecipeCostRecursive(recipeID, seen)
-        if c and (minCost == nil or c < minCost) then
-            minCost, minCostSource = c, s
-        end
-    end
-
-    for _,f in ipairs(TradeSkillPrice.costFunctions) do
-        local c, s = f.func(itemID, 1)
         if c and (minCost == nil or c < minCost) then
             minCost, minCostSource = c, s
         end
