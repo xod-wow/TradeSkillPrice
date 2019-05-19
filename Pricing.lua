@@ -98,7 +98,7 @@ end
 
 local GetItemCostRecursive, GetRecipeCostRecursive
 
-GetRecipeCostRecursive = function (recipeID, seen)
+GetRecipeCostRecursive = function (recipeID, count, seen)
     -- Can't depend on ourself, definitely not a winning strategy
     if seen[recipeID] ~= nil then
         return
@@ -112,10 +112,10 @@ GetRecipeCostRecursive = function (recipeID, seen)
     seen[recipeID] = true
 
     local cost, source
-    for itemID, count in pairs(object.reagents) do
-        local c, s = GetItemCostRecursive(itemID, seen)
+    for itemID, numRequired in pairs(object.reagents) do
+        local c, s = GetItemCostRecursive(itemID, numRequired * count, seen)
         if c ~= nil then
-            cost = (cost or 0) + c * count
+            cost = (cost or 0) + c
         elseif select(14, GetItemInfo(itemID)) ~= 1 then
             -- We found an unbound object we don't have a price for
             -- What if GetItemInfo doesn't work yet?
@@ -127,22 +127,23 @@ GetRecipeCostRecursive = function (recipeID, seen)
     end
 end
 
-GetItemCostRecursive = function (itemID, seen)
+GetItemCostRecursive = function (itemID, count, seen)
     if itemCostCache[itemID] ~= nil then
-        return unpack(itemCostCache[itemID])
+        local c, s = unpack(itemCostCache[itemID])
+        return c * count, s
     end
 
-    local minCost, minCostSource = GetMinItemBuyCost(itemID, 1)
+    local minCost, minCostSource = GetMinItemBuyCost(itemID, count)
 
     for _,recipeID in ipairs(itemRecipesCache[itemID] or {}) do
-        local c, s = GetRecipeCostRecursive(recipeID, seen)
+        local c, s = GetRecipeCostRecursive(recipeID, count, seen)
         if c and (minCost == nil or c < minCost) then
             minCost, minCostSource = c, s
         end
     end
 
     if minCost then
-        itemCostCache[itemID] = { minCost, minCostSource }
+        itemCostCache[itemID] = { minCost/count, minCostSource }
         return minCost, minCostSource
     end
 end
@@ -155,11 +156,11 @@ function TradeSkillPrice:GetRecipeItem(recipeID)
 end
 
 function TradeSkillPrice:GetItemCost(itemID)
-    return GetItemCostRecursive(itemID, {})
+    return GetItemCostRecursive(itemID, 1, {})
 end
 
 function TradeSkillPrice:GetRecipeCost(recipeID)
-    return GetRecipeCostRecursive(recipeID, {})
+    return GetRecipeCostRecursive(recipeID, 1, {})
 end
 
 function TradeSkillPrice:GetItemValue(itemID)
