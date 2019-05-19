@@ -92,6 +92,8 @@ local function GetMinItemBuyCost(itemID, count)
             minCost, minCostSource = c, s
         end
     end
+
+    return minCost, minCostSource
 end
 
 local GetItemCostRecursive, GetRecipeCostRecursive
