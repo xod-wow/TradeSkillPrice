@@ -42,7 +42,8 @@ local function ScanMerchantForReagents()
         _, _, price, _, numAvailable, isPurchasable, _, _, currencyID = GetMerchantItemInfo(i)
 
         if price > 0 and numAvailable < 0 and isPurchasable and not currencyID then
-            if select(12, GetItemInfo(id)) == 7 then
+            local classID = select(12, GetItemInfo(id))
+            if classID == 7 or TradeSkillPrice:IsItemKnownReagent(id) then
                 TradeSkillPrice.db.merchantItems[id] = price
             end
         end
