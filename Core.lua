@@ -248,6 +248,7 @@ end
 TradeSkillPrice:RegisterEvent("ADDON_LOADED")
 TradeSkillPrice:RegisterEvent("TRADE_SKILL_SHOW")
 TradeSkillPrice:RegisterEvent("TRADE_SKILL_DATA_SOURCE_CHANGED")
+TradeSkillPrice:RegisterEvent("SKILL_LINES_CHANGED")
 
 TradeSkillPrice:SetScript("OnEvent",
     function(self, event, arg1, arg2)
@@ -261,6 +262,9 @@ TradeSkillPrice:SetScript("OnEvent",
             -- is keyed off name so it doesn't return sensible values at that
             -- point. This triggers a refresh to try to pick up the data.
             C_Timer.After(2, function () self:RecalculatePrices() end)
+        elseif event == "SKILL_LINES_CHANGED" then
+            self:UpdateRecipeInfoCache()
+            self:RecalculatePrices()
         elseif event == "ADDON_LOADED" and arg1 == modName then
             self:Initialize()
         end
