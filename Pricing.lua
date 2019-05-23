@@ -111,8 +111,15 @@ GetRecipeCostRecursive = function (recipeID, count, seen)
     end
 
     local object = recipeInfoCache[recipeID]
+
+    -- Abort if we don't know it
     if not object.learned then
-        return nil
+        return
+    end
+
+    -- Abort if we know a better rank
+    if object.nextRecipeID and recipeInfoCache[object.nextRecipeID].learned then
+        return
     end
 
     seen[recipeID] = true
