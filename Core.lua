@@ -128,11 +128,21 @@ function TradeSkillPrice:FormatMoney(moneyString, highlight)
 end
 
 function TradeSkillPrice.ShowCostTooltip(button)
-    if button.TooltipLines then
+    if button.TooltipInfo then
         GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
         GameTooltip:ClearLines()
-        for _, line in ipairs(button.TooltipLines) do
-            GameTooltip:AddDoubleLine(unpack(line))
+        for i, info in ipairs(button.TooltipInfo) do
+            local name, count, cost = unpack(info)
+            if name and count and i ~= 1 then
+                name = format("%s x %d", name, count)
+            end
+            if cost then
+                cost = TradeSkillPrice:FormatMoneyForTooltip(cost)
+            end
+            GameTooltip:AddDoubleLine(name, cost)
+            if i == 1 then
+                GameTooltip:AddLine(" ")
+            end
         end
         GameTooltip:Show()
     end
@@ -176,24 +186,22 @@ function TradeSkillPrice.SetUpRecipe(button, textWidth, tradeSkillInfo)
 
     local recipeID = tradeSkillInfo.recipeID
 
-    local costAmount, costSource, costLines = TradeSkillPrice:GetRecipeCost(recipeID)
-    local valueAmount, valueSource, valueLines = TradeSkillPrice:GetRecipeValue(recipeID)
+    local costAmount, costSource, costTTInfo = TradeSkillPrice:GetRecipeCost(recipeID)
+    local valueAmount, valueSource = TradeSkillPrice:GetRecipeValue(recipeID)
     local highlight = (costAmount or 0) < (valueAmount or 0)
 
     if valueAmount then
         local valueText = TradeSkillPrice:FormatMoney(valueAmount, highlight)
         local sourceText = TradeSkillPrice:FormatSource(valueSource)
         button.lswValue.Text:SetText(valueText .. sourceText)
-        button.lswValue.TooltipLines = valueLines
     else
         button.lswValue.Text:SetText('--')
-        button.lswValue.TooltipText = nil
     end
 
     if costAmount then
         local costText = TradeSkillPrice:FormatMoney(costAmount)
         button.lswCost.Text:SetText(costText)
-        button.lswCost.TooltipLines = costLines
+        button.lswCost.TooltipInfo = costTTInfo
     else
         button.lswCost.Text:SetText('--')
         button.lswValue.TooltipLines = nil
