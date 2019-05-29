@@ -31,6 +31,7 @@ local function MultiplyTooltipInfo(tooltipInfo, n)
         infoLine[2] = infoLine[2] * n
         infoLine[3] = infoLine[3] * n
     end
+    return tooltipInfo
 end
 
 local function UpdateRecipeInfoCacheObject(object)
@@ -131,9 +132,10 @@ GetRecipeCostRecursive = function (recipeID, count, seen)
 
     seen[recipeID] = true
 
+    count = count / object.numCreated
+
     local cost, source
     local ttInfo = { { object.name, count } }
-
 
     for itemID, numRequired in pairs(object.reagents) do
         local c, s, t = GetItemCostRecursive(itemID, numRequired * count, seen)
@@ -147,7 +149,7 @@ GetRecipeCostRecursive = function (recipeID, count, seen)
         end
     end
     if cost then
-        return cost / object.numCreated, "r", ttInfo
+        return cost, "r", ttInfo
     end
 end
 
