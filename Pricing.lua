@@ -26,6 +26,13 @@ local allKnownReagents = { }
 -- TradeSkillPrice._itemRecipesCache = itemRecipesCache
 -- TradeSkillPrice._itemCostCache = itemCostCache
 
+local function MultiplyTooltipInfo(tooltipInfo, n)
+    for _, infoLine in ipairs(tooltipInfo) do
+        infoLine[2] = infoLine[2] * n
+        infoLine[3] = infoLine[3] * n
+    end
+end
+
 local function UpdateRecipeInfoCacheObject(object)
     if object.type == 'header' or object.type == 'subheader' then
         return
