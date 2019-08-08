@@ -180,6 +180,9 @@ function TradeSkillPrice.SetUpRecipe(button, textWidth, tradeSkillInfo)
         width = width - button.StarsFrame:GetWidth()
     end
 
+    button.SkillUps:ClearAllPoints()
+    button.SkillUps:SetPoint("LEFT", 20, 0)
+
     if button.Text:GetWidth() > width then
         button.Text:SetWidth(width)
     end
