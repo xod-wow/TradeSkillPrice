@@ -19,24 +19,36 @@
 
 local modName, modTable = ...
 
-local abortScan, lastGetAllTime = nil, 0
+local AH_SHOWHIDE_EVENTS = {
+    'AUCTION_HOUSE_SHOW',
+    'AUCTION_HOUSE_CLOSED'
+}
 
-local AuctionHouseScanner = CreateFrame('Frame')
-local lockoutFrame, needReregister
+local AH_ITEM_EVENTS = {
+    'AUCTION_HOUSE_BROWSE_RESULTS_ADDED',
+    'AUCTION_HOUSE_BROWSE_RESULTS_UPDATED',
+    'REPLICATE_ITEM_LIST_UPDATE'
+}
+
+-- local abortScan, lastGetAllTime = nil, 0
+
+local AuctionHouseScanner = CreateFrame('Frame', 'TradeSkillPriceAHScanner')
 
 local function CreateScanButton()
-    if AuctionFrameBrowse and not TradeSkillPriceAHScanButton then
-        local b = CreateFrame('Button', 'TradeSkillPriceAHScanButton', AuctionFrameBrowse, 'UIPanelButtonNoTooltipResizeToFitTemplate')
-        b:SetPoint('RIGHT', BrowseSearchButton, 'LEFT', -5, 0)
+    if AuctionHouseFrame and not TradeSkillPriceAHScanButton then
+        local b = CreateFrame('Button', 'TradeSkillPriceAHScanButton', AuctionHouseFrame.SearchBar, 'UIPanelButtonNoTooltipResizeToFitTemplate')
+        b:SetPoint('RIGHT', AuctionHouseFrame.CategoriesList.ScrollFrame, 'RIGHT')
+        b:SetPoint('CENTER', AuctionHouseFrame.SearchBar.FavoritesSearchButton, 'CENTER')
         b:SetText('TSP Scan')
         b:Show()
-        b:SetScript('OnClick', function () TradeSkillPrice:ScanAH() end)
+        b:SetScript('OnClick', function () C_AuctionHouse.ReplicateItems() end)
     end
 end
 
+--[[
 local function CreateLockoutFrame()
 
-    local f = CreateFrame('Frame', nil, AuctionFrame)
+    local f = CreateFrame('Frame', nil, AuctionHouseFrame)
     f:EnableMouse(true)
     f:SetFrameStrata('HIGH')
     f:SetAllPoints()
@@ -61,30 +73,20 @@ local function CreateLockoutFrame()
 
     return f
 end
+]]
 
-local function LockoutBlizzard()
-    if not AuctionFrame then return end
-
-    lockoutFrame = lockoutFrame or CreateLockoutFrame()
-    lockoutFrame.progress:SetText("Waiting for data from server")
-    lockoutFrame:Show()
-
-    AuctionFrameBrowse:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE')
-    needReregister = true
-end
-
-local function UnlockBlizzard()
-    if not AuctionFrameBrowse then return end
-
-    if lockoutFrame then
-        lockoutFrame:Hide()
-    end
-    if needReregister then
-        AuctionFrameBrowse:RegisterEvent('AUCTION_ITEM_LIST_UPDATE')
-        needReregister = nil
+local function UpdateItemPrice(itemID, price, when)
+    local data = TradeSkillPrice.db.auctionData
+    if not data[itemID]
+       or data[itemID].when ~= when
+       or price < data[itemID].price then
+        data[itemID] = { price=price, when=when }
+    else
+        data[itemID].when = when
     end
 end
 
+--[[
 local function StartScan(size)
 
     local now = time()
@@ -94,10 +96,6 @@ local function StartScan(size)
         ownerFullName, saleStatus, itemID, hasAllInfo
 
     local data = TradeSkillPrice.db.auctionData
-
-    if lockoutFrame and lockoutFrame:IsShown() then
-        lockoutFrame.progress:SetText(format("0/%d", size))
-    end
 
     local nConsecutiveFailures = 0
 
@@ -126,7 +124,7 @@ local function StartScan(size)
         saleStatus,     -- [16]
         itemID,         -- [17]
         hasAllInfo      -- [18]
-            = GetAuctionItemInfo('list', i)
+            = C_AuctionHouse.GetReplicateItemInfo(i-1)
 
         -- Saving the dumbest of dumb data, just the lowest price
         -- we've seen the most recently.
@@ -151,15 +149,14 @@ local function StartScan(size)
         -- This modulus should be at least NUM_AUCTION_ITEMS_PER_PAGE (50)
 
         if i % 1000 == 0 then
-            if lockoutFrame and lockoutFrame:IsShown() then
-                lockoutFrame.progress:SetText(format("%d/%d", i, size))
-            end
             coroutine.yield()
         end
     end
     TradeSkillPrice:ChatMessage('Scan completed, %d items scanned.', size)
 end
+]]
 
+--[[
 local function OnUpdate(self, elapsed)
     self.totalElapsed = (self.totalElapsed or 0) + elapsed
     if self.totalElapsed < 0.01 then
@@ -181,43 +178,26 @@ local function OnUpdate(self, elapsed)
         end
     end
 end
+]]
 
-local function AuctionItemListUpdate(self)
-    local batchSize, totalItems = GetNumAuctionItems('list')
+local function ProcessReplicateItemList(self)
+    local now = time()
+    local n = C_AuctionHouse.GetNumReplicateItems()
 
-    -- A dummy 0 result search is used to trigger the end of the scan
-    -- and re-enabling the Blizzard frame. A getall scan means we should
-    -- throw away all the other data
-
-    if batchSize ~= totalItems then
-        TradeSkillPrice:ChatMessage('Non-getall scan found')
-        UnlockBlizzard()
-        -- return
-    elseif time() < lastGetAllTime + 890 then
-        -- the getall seems to trigger returning the data about a million
-        -- times, so guard against seeing it again too soon, as it can only
-        -- happen once every 900 seconds.
-        return
-    else
-        lastGetAllTime = time()
-        table.wipe(TradeSkillPrice.db.auctionData)
+    -- The indexes are c-style 0 to n-1
+    for i = 0, n-1 do
+        local buyoutPrice, bidAmount, _, _, _, _, _, itemID = select(10, C_AuctionHouse.GetReplicateItemInfo(i-1))
+        if buyoutPrice > 0 then
+            UpdateItemPrice(itemID, price, now)
+        end
     end
+end
 
-    if batchSize == 0 then
-        return
+local function ProcessBrowseResults(self, browseResults)
+    local now = time()
+    for i, result in ipairs(browseResults) do
+        UpdateItemPrice(result.itemKey.itemID, result.minPrice, now)
     end
-
-    -- AUCTION_ITEM_LIST_UPDATE triggers on practically everything, and
-    -- multiple times. We can't do anything more useful so we just ignore
-    -- extra results while we're in the middle of doing something.
-
-    if self.thread then
-        return
-    end
-
-    TradeSkillPrice:ChatMessage('Starting auction house data scan of %d auctions', batchSize)
-    self.thread = coroutine.create(function () StartScan(batchSize) end)
-    self:SetScript('OnUpdate', OnUpdate)
 end
 
 local function GetMinPrice(itemID, count)
@@ -226,22 +206,13 @@ local function GetMinPrice(itemID, count)
     end
 end
 
-function TradeSkillPrice:ScanAH()
-    local canQuery, canQueryAll = CanSendAuctionQuery()
-    if canQueryAll then
-        LockoutBlizzard()
-        QueryAuctionItems('', nil, nil, 0, nil, nil, true, false, nil)
-    end
-end
-
-local function Init()
+local function Init(self)
 
     -- This is not a good test
     if #TradeSkillPrice.valueFunctions == 1 then
         TradeSkillPrice.db.auctionData = TradeSkillPrice.db.auctionData or {}
 
-        AuctionHouseScanner:RegisterEvent('AUCTION_HOUSE_SHOW')
-        AuctionHouseScanner:RegisterEvent('AUCTION_HOUSE_CLOSED')
+        FrameUtil.RegisterFrameForEvents(self, AH_SHOWHIDE_EVENTS)
 
         table.insert(TradeSkillPrice.valueFunctions,
                     {
@@ -261,16 +232,21 @@ end
 
 local function OnEvent(self, event, arg1)
     if event == 'AUCTION_HOUSE_SHOW' then
-        self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE')
+        FrameUtil.RegisterFrameForEvents(self, AH_ITEM_EVENTS)
         CreateScanButton()
     elseif event == 'AUCTION_HOUSE_CLOSED' then
         abortScan = true
-        self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE')
-    elseif event == 'AUCTION_ITEM_LIST_UPDATE' then
-        AuctionItemListUpdate(self)
+        FrameUtil.UnregisterFrameForEvents(self, AH_ITEM_EVENTS)
+    elseif event == 'AUCTION_HOUSE_BROWSE_RESULTS_ADDED' then
+        ProcessBrowseResults(self, arg1)
+    elseif event == 'AUCTION_HOUSE_BROWSE_RESULTS_UPDATED' then
+        local browseResults = C_AuctionHouse.GetBrowseResults()
+        ProcessBrowseResults(self, browseResults)
+    elseif event == 'REPLICATE_ITEM_LIST_UPDATE' then
+        ProcessReplicateItemList(self, browseResults)
     elseif event == 'ADDON_LOADED' then
         if arg1 == modName then
-            Init()
+            Init(self)
             self:UnregisterEvent('ADDON_LOADED')
         end
     end
