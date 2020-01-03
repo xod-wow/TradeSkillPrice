@@ -186,7 +186,7 @@ local function ProcessReplicateItemList(self)
 
     -- The indexes are c-style 0 to n-1
     for i = 0, n-1 do
-        local buyoutPrice, bidAmount, _, _, _, _, _, itemID = select(10, C_AuctionHouse.GetReplicateItemInfo(i-1))
+        local buyoutPrice, bidAmount, _, _, _, _, _, itemID = select(10, C_AuctionHouse.GetReplicateItemInfo(i))
         if buyoutPrice > 0 then
             UpdateItemPrice(itemID, price, now)
         end
