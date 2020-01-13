@@ -20,7 +20,6 @@
 local recipeInfoCache = { }
 local itemRecipesCache = { }
 local itemCostCache =  { }
-local allKnownReagents = { }
 
 -- TradeSkillPrice._recipeInfoCache = recipeInfoCache
 -- TradeSkillPrice._itemRecipesCache = itemRecipesCache
@@ -66,7 +65,7 @@ local function UpdateRecipeInfoCacheObject(object)
 
         if reagentItemID then
             object.reagents[reagentItemID] = count
-            allKnownReagents[reagentItemID] = true
+            TradeSkillPrice.knownReagents[reagentItemID] = true
         end
     end
 
@@ -76,10 +75,6 @@ local function UpdateRecipeInfoCacheObject(object)
         itemRecipesCache[object.itemID] = itemRecipesCache[object.itemID] or { }
         table.insert(itemRecipesCache[object.itemID], object.recipeID)
     end
-end
-
-function TradeSkillPrice:IsItemKnownReagent(itemID)
-    return allKnownReagents[itemID]
 end
 
 function TradeSkillPrice:ClearItemCostCache()

@@ -27,6 +27,7 @@ TradeSkillPrice.valueFunctions = {}
 local defaultConfig = {
     vendorOverride = {},
     fixedPrice = {},
+    knownReagents = {},
 }
 
 local function GetActiveChatFrame()
