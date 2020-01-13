@@ -80,23 +80,6 @@ local function AuctionValue(itemID, count)
     end
 end
 
-local function DisenchantValue(itemID, count)
-    local price
-
-    -- Assumption is that if an item has multiple variants that they
-    -- all DE the same.
-
-    if IDCache[itemID] then
-        local itemName = next(IDCache[itemID])
-        price = Atr_GetDisenchantValue(itemName)
-    else
-        price = Atr_GetDisenchantValue(itemID)
-    end
-    if price then
-        return price * count, "d"
-    end
-end
-
 local function Cost(itemID, count)
     local price
     if IDCache[itemID] then
@@ -115,11 +98,6 @@ if Atr_GetAuctionPrice then
                 {
                     ['name'] = 'Auctionator',
                     ['func'] =  AuctionValue
-                })
-    table.insert(TradeSkillPrice.valueFunctions,
-                {
-                    ['name'] = 'Auctionator Disenchant',
-                    ['func'] = DisenchantValue
                 })
     table.insert(TradeSkillPrice.costFunctions,
                 {
