@@ -30,17 +30,10 @@ local defaultConfig = {
     knownReagents = {},
 }
 
-local function GetActiveChatFrame()
-    for i = 1,NUM_CHAT_WINDOWS do
-        local f = _G["ChatFrame"..i]
-        if f:IsVisible() then return f end
-    end
-    return DEFAULT_CHAT_FRAME
-end
-
 function TradeSkillPrice:ChatMessage(...)
     local msg = format(...)
-    GetActiveChatFrame():AddMessage("|cff80d060"..msg.."|r")
+    local f = SELECTED_CHAT_FRAME or DEFAULT_CHAT_FRAME
+    f:AddMessage("|cff80d060TradeSkillPrice: "..msg.."|r")
 end
 
 function TradeSkillPrice:FormatMoneyForTooltip(money)
