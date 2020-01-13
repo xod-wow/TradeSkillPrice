@@ -77,13 +77,9 @@ end
 
 local function UpdateItemPrice(itemID, price, when)
     local data = TradeSkillPrice.db.auctionData
-    if not data[itemID]
-       or data[itemID].when ~= when
-       or price < data[itemID].price then
-        data[itemID] = { price=price, when=when }
-    else
-        data[itemID].when = when
-    end
+    data[itemID] = data[itemID] or {}
+    data[itemID].price = price
+    data[itemID].when = when
 end
 
 --[[
