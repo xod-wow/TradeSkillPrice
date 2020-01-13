@@ -59,24 +59,15 @@ local function GetAllRanks(info)
 end
 
 local function Scan()
-    print('Starting enchanting scroll scan.')
-
-    for _,recipeSpellID in ipairs(C_TradeSkillUI.GetAllRecipeIDs()) do
-        local info = C_TradeSkillUI.GetRecipeInfo(recipeSpellID)
-        if not info.previousRecipeID then
-            recipeSpellsByID[info.recipeID] = GetAllRanks(info)
-        end
-    end
-
     print('You can close the tradeskill frame now.')
-    for i = 1, 250 do
-        local min = (i-1)*1000+1
-        print('Scan ' .. min)
-        Precache(min, min+1000)
+    for i = 0, 249 do
+        print('Scan ' .. i*1000+1)
+        Precache(i*1000+1, (i+1)*1000)
         coroutine.yield()
-        ScanPartial(min, min+1000)
+        ScanPartial(i*1000+1, (i+1)*1000)
         coroutine.yield()
     end
+    print('Finished')
 end
 
 local function OnUpdate(self, elapsed)
@@ -113,6 +104,15 @@ function TradeSkillPrice:ScanForScrolls()
     if not TradeSkillFrame or not TradeSkillFrame:IsVisible() then
         print('Open the enchanting tradeskill first.')
         return
+    end
+
+    print('Starting enchanting scroll scan.')
+
+    for _,recipeSpellID in ipairs(C_TradeSkillUI.GetAllRecipeIDs()) do
+        local info = C_TradeSkillUI.GetRecipeInfo(recipeSpellID)
+        if not info.previousRecipeID then
+            recipeSpellsByID[info.recipeID] = GetAllRanks(info)
+        end
     end
 
     TradeSkillPrice.db.scrollData = "TradeSkillPrice.scrollData = {"
