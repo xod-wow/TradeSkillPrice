@@ -75,10 +75,11 @@ local function CreateLockoutFrame()
 end
 ]]
 
-local function UpdateItemPrice(itemID, price, when)
+local function UpdateItemPrice(itemID, price, count, when)
     local data = TradeSkillPrice.db.auctionData
     data[itemID] = data[itemID] or {}
     data[itemID].price = price
+    data[itemID].count = count
     data[itemID].when = when
 end
 
@@ -180,19 +181,31 @@ local function ProcessReplicateItemList(self)
     local now = time()
     local n = C_AuctionHouse.GetNumReplicateItems()
 
+    local name, texture, count, qualityID, usable, level, levelType, minBid,
+          minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName,
+          owner, ownerFullName, saleStatus, itemID, hasAllInfo
+
+    TradeSkillPrice:ChatMessage(format('Processing %d auction listings.', n))
     -- The indexes are c-style 0 to n-1
     for i = 0, n-1 do
-        local buyoutPrice, bidAmount, _, _, _, _, _, itemID = select(10, C_AuctionHouse.GetReplicateItemInfo(i))
+        name, texture, count, qualityID, usable, level, levelType,
+        minBid, minIncrement, buyoutPrice, bidAmount, highBidder,
+        bidderFullName, owner, ownerFullName, saleStatus, itemID,
+        hasAllInfo = C_AuctionHouse.GetReplicateItemInfo(i)
+
         if buyoutPrice > 0 then
-            UpdateItemPrice(itemID, price, now)
+            UpdateItemPrice(itemID, price, count, now)
+        else
+            TradeSkillPrice:ChatMessage(format('Zero price item: %s (%d).', name, itemID))
         end
     end
 end
 
 local function ProcessBrowseResults(self, browseResults)
+    TradeSkillPrice:ChatMessage(format('Processing %d auction browse results.', #browseResults))
     local now = time()
     for i, result in ipairs(browseResults) do
-        UpdateItemPrice(result.itemKey.itemID, result.minPrice, now)
+        UpdateItemPrice(result.itemKey.itemID, result.minPrice, result.count, now)
     end
 end
 
