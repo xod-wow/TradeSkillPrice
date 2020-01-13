@@ -1,6 +1,6 @@
 --[[----------------------------------------------------------------------------
 
-    Copyright 2019 Mike Battersby
+    Copyright 2019-2020 Mike Battersby
 
     This file is part of TradeSkillPrice.
 
