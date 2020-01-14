@@ -194,7 +194,7 @@ local function ProcessReplicateItemList(self)
         hasAllInfo = C_AuctionHouse.GetReplicateItemInfo(i)
 
         if buyoutPrice > 0 then
-            UpdateItemPrice(itemID, price, count, now)
+            UpdateItemPrice(itemID, buyoutPrice, count, now)
         else
             TradeSkillPrice:ChatMessage(format('Zero price item: %s (%d).', name, itemID))
         end

@@ -65,7 +65,7 @@ local function UpdateRecipeInfoCacheObject(object)
 
         if reagentItemID then
             object.reagents[reagentItemID] = count
-            TradeSkillPrice.knownReagents[reagentItemID] = true
+            TradeSkillPrice.db.knownReagents[reagentItemID] = true
         end
     end
 

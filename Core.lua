@@ -247,6 +247,9 @@ end
 function TradeSkillPrice:Initialize()
     TradeSkillPriceDB = TradeSkillPriceDB or { }
     self.db = TradeSkillPriceDB
+    for k,v in pairs(defaultConfig) do
+        self.db[k] = self.db[k] or {}
+    end
     self.initialized = true
 end
 
