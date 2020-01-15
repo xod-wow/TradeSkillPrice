@@ -77,10 +77,17 @@ end
 
 local function UpdateItemPrice(itemID, price, count, when)
     local data = TradeSkillPrice.db.auctionData
-    data[itemID] = data[itemID] or {}
-    data[itemID].price = price
-    data[itemID].count = count
-    data[itemID].when = when
+    if not data[itemID] then
+        data[itemID] = {
+                price = price,
+                count = count,
+                when = when
+            }
+    elseif data[itemID].when < when or price < data[itemID].price then
+        data[itemID].price = price
+        data[itemID].count = count
+        data[itemID].when = when
+    end
 end
 
 --[[
@@ -185,7 +192,7 @@ local function ProcessReplicateItemList(self)
           minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName,
           owner, ownerFullName, saleStatus, itemID, hasAllInfo
 
-    TradeSkillPrice:ChatMessage(format('Processing %d auction listings.', n))
+    TradeSkillPrice:ChatMessage(format('Processing %d auction scan listings.', n))
     -- The indexes are c-style 0 to n-1
     for i = 0, n-1 do
         name, texture, count, qualityID, usable, level, levelType,
@@ -195,10 +202,10 @@ local function ProcessReplicateItemList(self)
 
         if buyoutPrice > 0 then
             UpdateItemPrice(itemID, buyoutPrice, count, now)
-        else
-            TradeSkillPrice:ChatMessage(format('Zero price item: %s (%d).', name, itemID))
         end
     end
+
+    TradeSkillPrice:ChatMessage(format('Processed %d auction scan listings.', n))
 end
 
 local function ProcessBrowseResults(self, browseResults)
@@ -252,7 +259,10 @@ local function OnEvent(self, event, arg1)
         local browseResults = C_AuctionHouse.GetBrowseResults()
         ProcessBrowseResults(self, browseResults)
     elseif event == 'REPLICATE_ITEM_LIST_UPDATE' then
-        ProcessReplicateItemList(self, browseResults)
+        if time() > (self.lastReplicate or 0) + 60 then
+            ProcessReplicateItemList(self, browseResults)
+            self.lastReplicate = time()
+        end
     elseif event == 'ADDON_LOADED' then
         if arg1 == modName then
             Init(self)
