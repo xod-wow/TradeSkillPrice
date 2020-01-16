@@ -222,6 +222,16 @@ local function GetMinPrice(itemID, count)
     end
 end
 
+local function OnTooltipSetItem(ttFrame)
+    local item
+    local _, link = ttFrame:GetItem()
+    local id = GetItemInfoFromHyperlink(link)
+    if id and TradeSkillPrice.db.auctionData[id] then
+        local price = GetMoneyString(TradeSkillPrice.db.auctionData[id].price, true)
+        ttFrame:AddDoubleLine("Auction", price)
+    end
+end
+
 local function Init(self)
 
     -- This is not a good test
@@ -241,9 +251,12 @@ local function Init(self)
                         ['func'] =  GetMinPrice,
                     })
 
+    GameTooltip:HookScript('OnTooltipSetItem', OnTooltipSetItem)
+
     else
         TradeSkillPrice.db.auctionData = nil
     end
+
 end
 
 local function OnEvent(self, event, arg1)
