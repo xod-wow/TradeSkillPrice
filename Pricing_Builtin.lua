@@ -203,6 +203,10 @@ local function ProcessReplicateItemList(self)
         if buyoutPrice > 0 then
             UpdateItemPrice(itemID, buyoutPrice, count, now)
         end
+
+        if i % 5000 == 0 then
+            TradeSkillPrice:ChatMessage(format('  %d: %d %s', i, itemID, GetMoneyString(buyoutPrice or 0, true)))
+        end
     end
 
     TradeSkillPrice:ChatMessage(format('Processed %d auction scan listings.', n))
