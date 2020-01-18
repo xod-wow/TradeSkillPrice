@@ -222,21 +222,22 @@ local function GetMinPrice(itemID, count)
     end
 end
 
-local function TooltipAddPrice(ttFrame, count)
-    local _, link = ttFrame:GetItem()
-    if not link then return end
+local function TooltipAddPrice(ttFrame, link, count)
     local id = GetItemInfoFromHyperlink(link)
     if id and TradeSkillPrice.db.auctionData[id] then
         local copper = TradeSkillPrice.db.auctionData[id].price
-        local right
-        if IsShiftKeyDown() then
-            local price = GetMoneyString(copper * count, true)
-            right = format('|cff80d060Auction x %0.1f:|r |cffffffff%s|r', count, price)
-        else
-            local price = GetMoneyString(copper, true)
-            right = format('|cff80d060Auction:|r |cffffffff%s|r', price)
+        local price = GetMoneyString(copper, true)
+        local text = format('|cff80d060Auction :|r |cffffffff%s', price)
+        ttFrame:AddLine(text)
+        if count > 1 then
+            price = GetMoneyString(copper * count, true)
+            if math.floor(count) == count then
+                text = format('|cff80d060Auction x %d :|r |cffffffff%s|r', math.floor(count), price)
+            else
+                text = format('|cff80d060Auction x %0.1f :|r |cffffffff%s|r', count, price)
+            end
+            ttFrame:AddLine(text)
         end
-        ttFrame:AddLine(right)
         ttFrame:Show()
     end
 end
@@ -262,33 +263,40 @@ local function Init(self)
 
     hooksecurefunc(GameTooltip, 'SetBagItem',
         function (ttFrame, bag, slot)
-            local _, count = GetContainerItemInfo(bag, slot)
-            TooltipAddPrice(ttFrame, count)
+            local link = GetContainerItemLink(bag, slot)
+            if link then
+                local _, count = GetContainerItemInfo(bag, slot)
+                TooltipAddPrice(ttFrame, link, count)
+            end
         end)
     hooksecurefunc(GameTooltip, 'SetLootItem',
         function (ttFrame, slot)
-            local _, _, count = GetLootSlotLink(slot)
-            TooltipAddPrice(ttFrame, count)
+            local link, _, count = GetLootSlotLink(slot)
+            TooltipAddPrice(ttFrame, link, count)
         end)
     hooksecurefunc(GameTooltip, 'SetInventoryItem',
         function (ttFrame, unit, slot)
+            local link = GetInventoryItemLink(unit, slot)
             local count = GetInventoryItemCount(unit, slot)
-            TooltipAddPrice(ttFrame, count)
+            TooltipAddPrice(ttFrame, link, count)
         end)
     hooksecurefunc(GameTooltip, 'SetGuildBankItem',
         function (ttFrame, tab, slot)
+            local link = GetGuildBankItemLink(tab, slot)
             local _, count = GetGuildBankItemInfo(tab, slot)
-            TooltipAddPrice(ttFrame, count)
+            TooltipAddPrice(ttFrame, link, count)
         end)
     hooksecurefunc(GameTooltip, 'SetRecipeResultItem',
         function (ttFrame, id)
+            local link = C_TradeSkillUI.GetRecipeItemLink(id)
             local a, b = C_TradeSkillUI.GetRecipeNumItemsProduced(id)
-            TooltipAddPrice(ttFrame, (a+b)/2)
+            TooltipAddPrice(ttFrame, link, (a+b)/2)
         end)
     hooksecurefunc(GameTooltip, 'SetRecipeReagentItem',
         function (ttFrame, id, index)
+            local link = C_TradeSkillUI.GetRecipeReagentItemLink(id, index)
             local _, _, count = C_TradeSkillUI.GetRecipeReagentInfo(id, index)
-            TooltipAddPrice(ttFrame, count)
+            TooltipAddPrice(ttFrame, link, count)
         end)
     else
         TradeSkillPrice.db.auctionData = nil
