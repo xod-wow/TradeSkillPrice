@@ -223,6 +223,8 @@ local function GetMinPrice(itemID, count)
 end
 
 local function TooltipAddPrice(ttFrame, link, count)
+    if not link then return end
+    count = count or 1
     local id = GetItemInfoFromHyperlink(link)
     if id and TradeSkillPrice.db.auctionData[id] then
         local copper = TradeSkillPrice.db.auctionData[id].price
@@ -264,10 +266,8 @@ local function Init(self)
     hooksecurefunc(GameTooltip, 'SetBagItem',
         function (ttFrame, bag, slot)
             local link = GetContainerItemLink(bag, slot)
-            if link then
-                local _, count = GetContainerItemInfo(bag, slot)
-                TooltipAddPrice(ttFrame, link, count)
-            end
+            local _, count = GetContainerItemInfo(bag, slot)
+            TooltipAddPrice(ttFrame, link, count)
         end)
     hooksecurefunc(GameTooltip, 'SetLootItem',
         function (ttFrame, slot)
