@@ -240,7 +240,7 @@ function TradeSkillPrice:RefreshRecipeList()
 end
 
 function TradeSkillPrice:RecalculatePrices()
-    self:ClearItemCostCache()
+    self:ResetPricings()
     self:RefreshRecipeList()
 end
 
@@ -263,7 +263,7 @@ TradeSkillPrice:SetScript("OnEvent",
         if event == "TRADE_SKILL_SHOW" then
             self:CreateAllDynamicButtons()
         elseif event == "TRADE_SKILL_DATA_SOURCE_CHANGED" then
-            self:UpdateRecipeInfoCache()
+            self:ScanOpenTradeskill()
             self:RecalculatePrices()
             -- The first time we load the tradeskill the client doesn't have
             -- cached info so GetItemInfo() returns nil. Auctionator (at least)
@@ -271,7 +271,7 @@ TradeSkillPrice:SetScript("OnEvent",
             -- point. This triggers a refresh to try to pick up the data.
             C_Timer.After(2, function () self:RecalculatePrices() end)
         elseif event == "SKILL_LINES_CHANGED" then
-            self:UpdateRecipeInfoCache()
+            self:ScanOpenTradeskill()
             self:RecalculatePrices()
         elseif event == "ADDON_LOADED" and arg1 == modName then
             self:Initialize()
