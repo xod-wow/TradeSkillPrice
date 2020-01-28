@@ -19,7 +19,6 @@
 
 local recipeDetails = { }
 local itemRecipesMap = { }
-local recipeMinCostCache = { }
 
 -- TradeSkillPrice._recipeDetails = recipeDetails
 -- TradeSkillPrice._itemRecipesMap = itemRecipesMap
@@ -121,7 +120,6 @@ function TradeSkillPrice:ScanOpenTradeskill()
 end
 
 function TradeSkillPrice:ResetPricings()    
-    table.wipe(recipeMinCostCache)
 end
 
 local function GetMinItemBuyCost(itemID, count)
@@ -159,10 +157,6 @@ GetRecipeCostRecursive = function (object, seen)
         end
     end
 
-    if recipeMinCostCache[object.recipeID] then
-        return unpack(recipeMinCostCache[object.recipeID])
-    end
-
     seen[object.recipeID] = true
 
     local cost, source
@@ -181,10 +175,7 @@ GetRecipeCostRecursive = function (object, seen)
         end
     end
     if cost then
-        recipeMinCostCache[object.recipeID] = { cost, "r", ttInfo }
         return cost, "r", ttInfo
-    else
-        recipeMinCostCache[object.recipeID] = { }
     end
 end
 
