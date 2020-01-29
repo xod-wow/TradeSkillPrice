@@ -28,18 +28,18 @@ recipeDetails objects:
 
 {
   categoryID          Number  ID of the category the recipe belongs to.
-  craftable           Boolean Indicates if the recipe can be crafted.
+  craftable           Boolean
   difficulty          String  "trivial", "easy", "optimal", or "medium"
-  disabled            Boolean Indicates if the recipe is disabled.
-  favorite            Boolean Indicates if the recipe is marked as a favorite.
-  hiddenUnlessLearned Boolean Indicates if the recipe should be hidden if it has yet to be learned.
+  disabled            Boolean
+  favorite            Boolean
+  hiddenUnlessLearned Boolean
   icon                Number  ID of the recipe's icon.
-  learned             Boolean Indicates if the character has learned the recipe.
-  name                String  Name of the recipe.
+  learned             Boolean
+  name                String
   nextRecipeID        Number  ID of next recipe in the list.
-  numAvailable        Number  The number that can be created with the available reagents.
-  numIndents          Number  Number of indents when displaying under categories.
-  numSkillUps         Number  The number of skillups from creating the recipe.
+  numAvailable        Number
+  numIndents          Number  Number of indents when displaying.
+  numSkillUps         Number
   previousRecipeID    Number  ID of the previous recipe in the list.
   recipeID            Number  ID of the recipe.
   sourceType          Number  Source of the recipe.
@@ -102,7 +102,7 @@ local function UpdateRecipeDetails(recipeID)
         local reagentItemID = GetItemInfoFromHyperlink(reagentItemLink)
 
         if reagentItemID then
-            object.reagents[reagentItemID] = count
+            table.insert(object.reagents, { reagentItemID, count })
             TradeSkillPrice.db.knownReagents[reagentItemID] = true
         end
     end
@@ -145,7 +145,8 @@ end
 
 local function GetMinRecipeCost(object, seen)
     local cost = 0
-    for itemID, count in pairs(object.reagents) do
+    for _, info in ipairs(object.reagents) do
+        local itemID, count = unpack(info)
         local c, s = GetMinItemBuyCost(itemID, count)
         cost = cost + (c or 0)
     end
@@ -156,7 +157,8 @@ local function GetMinRecipeTooltip(object, seen)
     local tooltipLines = { }
 
     local cost = 0
-    for itemID, count in pairs(object.reagents) do
+    for _, info in ipairs(object.reagents) do
+        local itemID, count = unpack(info)
         local c, s = GetMinItemBuyCost(itemID, count)
         local _, itemLink = GetItemInfo(itemID)
         table.insert(tooltipLines, { itemLink, count, c })
