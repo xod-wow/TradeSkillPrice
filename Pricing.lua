@@ -44,13 +44,13 @@ recipeDetails objects:
   recipeID            Number  ID of the recipe.
   sourceType          Number  Source of the recipe.
   type                String  Type of recipe
-  alternateVerb       String  Alternate verb used for the recipe (such as enchants, or engineering tinkers)
+  alternateVerb       String  Alternate verb used for the recipe
 
   itemID              Number  ItemID of created item, or scroll for enchants
   itemLink            String  ItemLink of created item
   numCreated          Number
   hasCooldown         Boolean
-  reagents            [ { itemID, count }, ... ]
+  reagents            { itemID: count, ... }
 }
 
 ]]
@@ -60,6 +60,12 @@ local function UpdateRecipeDetails(recipeID)
 
     if object.type == 'header' or object.type == 'subheader' then
         return
+    end
+
+    -- Don't save recipes that we know a better rank of
+    if object.nextRecipeID then
+        local nr = C_TradeSkillUI.GetRecipeInfo(object.nextRecipeID)
+        if nr and nr.learned then return end
     end
 
     if recipeDetails[recipeID] then
@@ -96,7 +102,7 @@ local function UpdateRecipeDetails(recipeID)
         local reagentItemID = GetItemInfoFromHyperlink(reagentItemLink)
 
         if reagentItemID then
-            table.insert(object.reagents, { reagentItemID, count })
+            object.reagents[reagentItemID] = count
             TradeSkillPrice.db.knownReagents[reagentItemID] = true
         end
     end
@@ -115,7 +121,9 @@ function TradeSkillPrice:ScanOpenTradeskill()
     end
 
     for i, recipeID in ipairs(C_TradeSkillUI.GetAllRecipeIDs()) do
-        UpdateRecipeDetails(recipeID)
+        if not recipeDetails[recipeID] then
+            UpdateRecipeDetails(recipeID)
+        end
     end
 end
 
@@ -135,85 +143,36 @@ local function GetMinItemBuyCost(itemID, count)
     return minCost, minCostSource
 end
 
-local GetItemCostRecursive, GetRecipeCostRecursive
-
-GetRecipeCostRecursive = function (object, seen)
-
-    -- Can't depend on ourself, definitely not a winning strategy
-    if seen[object.recipeID] ~= nil then
-        return
+local function GetMinRecipeCost(object, seen)
+    local cost = 0
+    for itemID, count in pairs(object.reagents) do
+        local c, s = GetMinItemBuyCost(itemID, count)
+        cost = cost + (c or 0)
     end
-
-    -- Don't do non-optimal things when recursing
-    if next(seen) then
-        -- Abort if we don't know it or it has a cooldown
-        if object.hasCooldown or not object.learned then
-            return
-        end
-
-        -- Abort if we know a better rank
-        if object.nextRecipeID and recipeDetails[object.nextRecipeID].learned then
-            return
-        end
-    end
-
-    seen[object.recipeID] = true
-
-    local cost, source
-    local ttInfo = { { object.name, object.numCreated } }
-
-    for _, reagentInfo in pairs(object.reagents) do
-        local itemID, numRequired = unpack(reagentInfo)
-        local c, s, t = GetItemCostRecursive(itemID, numRequired, seen)
-        if c ~= nil then
-            cost = (cost or 0) + c
-            for _,v in ipairs(t) do table.insert(ttInfo, v) end
-        elseif select(14, GetItemInfo(itemID)) ~= 1 then
-            -- We found an unbound object we don't have a price for
-            -- What if GetItemInfo doesn't work yet?
-            return
-        end
-    end
-    if cost then
-        return cost, "r", ttInfo
-    end
+    return cost
 end
 
-GetItemCostRecursive = function (itemID, count, seen)
-    local minCost, minCostSource = GetMinItemBuyCost(itemID, count)
-    local ttInfo, object
+local function GetMinRecipeTooltip(object, seen)
+    local tooltipLines = { }
 
-    for recipeID in pairs(itemRecipesMap[itemID] or {}) do
-        object = recipeDetails[recipeID]
-        local c, s, t = GetRecipeCostRecursive(object, CopyTable(seen))
-        if c then
-            c = c * count / object.numCreated
-            if minCost == nil or c < minCost then
-                for _,v in ipairs(t) do
-                    v[2] = v[2] * count / object.numCreated
-                    if v[3] ~= nil then
-                        v[3] = v[3] * count / object.numCreated
-                    end
-                end
-                minCost, minCostSource, ttInfo = c, s, t
-            end
-        end
+    local cost = 0
+    for itemID, count in pairs(object.reagents) do
+        local c, s = GetMinItemBuyCost(itemID, count)
+        local _, itemLink = GetItemInfo(itemID)
+        table.insert(tooltipLines, { itemLink, count, c })
+        cost = cost + (c or 0)
     end
-
-    if minCost then
-        if not ttInfo then
-            local _, itemLink = GetItemInfo(itemID)
-            ttInfo = { { itemLink, count, minCost } }
-        end
-        return minCost, minCostSource, ttInfo
-    end
+    return tooltipLines
 end
 
 function TradeSkillPrice:GetRecipeCost(recipeID)
     local object = recipeDetails[recipeID]
-    if object then
-        return GetRecipeCostRecursive(object, {})
-    end
+    return GetMinRecipeCost(object, {})
+end
+
+function TradeSkillPrice:GetRecipeTooltip(recipeID)
+    local object = recipeDetails[recipeID]
+    return GetMinRecipeTooltip(object, {})
 end
 
 function TradeSkillPrice:GetItemValue(itemID)
