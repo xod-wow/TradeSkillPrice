@@ -26,6 +26,7 @@
 TradeSkillPrice.xml
 
 Core.lua
+AlchemyContainers.lua
 EnchantingScrolls.lua
 
 Pricing.lua

@@ -84,6 +84,9 @@ local function UpdateItemPrice(itemID, price, count, when)
                 when = when
             }
     elseif data[itemID].when < when or price < data[itemID].price then
+        if itemID == 170332 then
+            print('Updating it ' .. tostring(price))
+        end
         data[itemID].price = price
         data[itemID].count = count
         data[itemID].when = when
@@ -304,7 +307,7 @@ local function Init(self)
 
 end
 
-local function OnEvent(self, event, arg1)
+local function OnEvent(self, event, arg1, ...)
     if event == 'AUCTION_HOUSE_SHOW' then
         FrameUtil.RegisterFrameForEvents(self, AH_ITEM_EVENTS)
         CreateScanButton()
@@ -317,6 +320,7 @@ local function OnEvent(self, event, arg1)
         local browseResults = C_AuctionHouse.GetBrowseResults()
         ProcessBrowseResults(self, browseResults)
     elseif event == 'REPLICATE_ITEM_LIST_UPDATE' then
+        print(arg1, ...)
         if time() > (self.lastReplicate or 0) + 60 then
             ProcessReplicateItemList(self, browseResults)
             self.lastReplicate = time()

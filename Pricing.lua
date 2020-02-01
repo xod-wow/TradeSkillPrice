@@ -78,12 +78,12 @@ local function UpdateRecipeDetails(recipeID)
     object.itemLink = C_TradeSkillUI.GetRecipeItemLink(recipeID)
     object.itemID = GetItemInfoFromHyperlink(object.itemLink)
 
-    if object.itemID then
-        local a, b = C_TradeSkillUI.GetRecipeNumItemsProduced(recipeID)
-        object.numCreated = (a+b)/2
-    elseif TradeSkillPrice.scrollData[recipeID] then
+    if TradeSkillPrice.scrollData[recipeID] then
         object.itemID = TradeSkillPrice.scrollData[recipeID]
         object.numCreated = 1
+    elseif object.itemID then
+        local a, b = C_TradeSkillUI.GetRecipeNumItemsProduced(recipeID)
+        object.numCreated = (a+b)/2
     else
         -- It doesn't create anything, what now?
         object.numCreated = 1
@@ -180,10 +180,23 @@ end
 function TradeSkillPrice:GetItemValue(itemID)
     local value, source
 
-    for _,f in ipairs(TradeSkillPrice.valueFunctions) do
-        local v, s = f.func(itemID, 1)
-        if v and v > (value or 0) then
-            value, source = v, s
+    local cData = TradeSkillPrice.alchemyContainerData[itemID]
+    if cData then
+        for _, info in ipairs(cData) do
+            local v, s = self:GetItemValue(info[1])
+            if not source then
+                source = s
+            elseif source ~= s then
+                source = m
+            end
+            value = (value or 0) + v * info[2]
+        end
+    else
+        for _,f in ipairs(TradeSkillPrice.valueFunctions) do
+            local v, s = f.func(itemID, 1)
+            if v and v > (value or 0) then
+                value, source = v, s
+            end
         end
     end
 
