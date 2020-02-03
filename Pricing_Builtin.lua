@@ -212,7 +212,7 @@ local function ProcessBrowseResults(self, browseResults)
     TradeSkillPrice:ChatMessage(format('Processing %d auction browse results.', #browseResults))
     local now = time()
     for i, result in ipairs(browseResults) do
-        UpdateItemPrice(result.itemKey.itemID, result.minPrice, result.count, now)
+        UpdateItemPrice(result.itemKey.itemID, result.minPrice, result.totalQuantity, now)
     end
 end
 
