@@ -46,17 +46,17 @@ local function CreateScanButton()
 end
 
 local function UpdateItemPrice(itemID, price, count, when)
-    local data = TradeSkillPrice.db.auctionData
-    if not AHScanner.data[itemID] then
-        AHScanner.data[itemID] = {
+    local data = AHScanner.data
+    if not data[itemID] then
+        data[itemID] = {
                 price = price,
                 count = count,
                 when = when
             }
     elseif data[itemID].when < when or price < data[itemID].price then
-        AHScanner.data[itemID].price = price
-        AHScanner.data[itemID].count = count
-        AHScanner.data[itemID].when = when
+        data[itemID].price = price
+        data[itemID].count = count
+        data[itemID].when = when
     end
 end
 
