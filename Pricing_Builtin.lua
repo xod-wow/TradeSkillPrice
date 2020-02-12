@@ -166,6 +166,7 @@ local function Init(self)
         end)
     hooksecurefunc(GameTooltip, 'SetGuildBankItem',
         function (ttFrame, tab, slot)
+            if not ttFrame:GetItem() then return end
             local link = GetGuildBankItemLink(tab, slot)
             local _, count = GetGuildBankItemInfo(tab, slot)
             TooltipAddPrice(ttFrame, link, count)
