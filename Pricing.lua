@@ -207,6 +207,8 @@ function TradeSkillPrice:GetRecipeValue(recipeID)
     local object = recipeDetails[recipeID]
     if object and object.itemID then
         local cost, source = self:GetItemValue(object.itemID)
-        return cost * object.numCreated, source
+        if cost then
+            return cost * object.numCreated, source
+        end
     end
 end
