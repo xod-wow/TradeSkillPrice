@@ -30,9 +30,9 @@
         </Layer>
     </Layers>
 
-    <NormalFont inherits="GameFontNormalSmall" justifyH="RIGHT"/>
-    <HighlightFont inherits="GameFontHighlightSmall" justifyH="RIGHT"/>
-    <DisabledFont inherits="GameFontDisableSmall" justifyH="RIGHT"/>
+    <NormalFont style="GameFontNormalSmall" />
+    <HighlightFont style="GameFontHighlightSmall" />
+    <DisabledFont style="GameFontDisableSmall" />
 </Button>
 
 </Ui>
