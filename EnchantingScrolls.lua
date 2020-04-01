@@ -35,7 +35,7 @@ local function ScanPartial(min, max)
         local itemName = GetItemInfo(itemID)
         -- if the item casts a spell and any recipe also casts that spell
         if itemSpellID and recipeSpellsByID[itemSpellID] then
-            print(format('Found one %d = %s', itemID, itemName))
+            SELECTED_CHAT_FRAME:AddMessage(format('Found one %d = %s', itemID, itemName))
             -- associate the item with all recipes that cast the spell,
             -- matching them by name
             local allIDs = recipeSpellsByID[itemSpellID]
@@ -59,15 +59,15 @@ local function GetAllRanks(info)
 end
 
 local function Scan()
-    print('You can close the tradeskill frame now.')
+    SELECTED_CHAT_FRAME:AddMessage('You can close the tradeskill frame now.')
     for i = 0, 249 do
-        print('Scan ' .. i*1000+1)
+        SELECTED_CHAT_FRAME:AddMessage('Scan ' .. i*1000+1)
         Precache(i*1000+1, (i+1)*1000)
         coroutine.yield()
         ScanPartial(i*1000+1, (i+1)*1000)
         coroutine.yield()
     end
-    print('Finished')
+    SELECTED_CHAT_FRAME:AddMessage('Finished')
 end
 
 local function OnUpdate(self, elapsed)
@@ -90,7 +90,7 @@ local function OnUpdate(self, elapsed)
     else
         local t, e = coroutine.resume(self.thread)
         if t == false then
-            print(e)
+            SELECTED_CHAT_FRAME:AddMessage(e)
         end
     end
 end
@@ -102,11 +102,11 @@ end
 
 function TradeSkillPrice:ScanForScrolls()
     if not TradeSkillFrame or not TradeSkillFrame:IsVisible() then
-        print('Open the enchanting tradeskill first.')
+        SELECTED_CHAT_FRAME:AddMessage('Open the enchanting tradeskill first.')
         return
     end
 
-    print('Starting enchanting scroll scan.')
+    SELECTED_CHAT_FRAME:AddMessage('Starting enchanting scroll scan.')
 
     for _,recipeSpellID in ipairs(C_TradeSkillUI.GetAllRecipeIDs()) do
         local info = C_TradeSkillUI.GetRecipeInfo(recipeSpellID)

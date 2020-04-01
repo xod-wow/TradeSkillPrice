@@ -90,6 +90,7 @@ function TradeSkillPrice:FormatMoney(moneyString, highlight)
 
     digits = math.floor(math.log10(money)+1)
 
+    local gsc
     if neg then
         if digits < 3 then
             gsc = string.format("  |c%s%3d|r",  GSC_COPPER, -c)
