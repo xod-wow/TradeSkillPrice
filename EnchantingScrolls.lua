@@ -246,7 +246,6 @@ TradeSkillPrice.scrollData = {
     [025084] = 038894, -- Enchant Cloak - Subtlety
     [025086] = 038895, -- Enchant Cloak - Dodge
     [027837] = 038896, -- Enchant 2H Weapon - Agility
-    [027899] = 035420, -- Enchant Bracer - Brawn
     [027899] = 038897, -- Enchant Bracer - Brawn
     [027905] = 035426, -- Enchant Bracer - Stats
     [027905] = 038898, -- Enchant Bracer - Stats
