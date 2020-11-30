@@ -23,26 +23,30 @@ local scanFrame = CreateFrame('Frame')
 local function Precache(min, max)
     -- This pulls the item into the client cache from the server so that
     -- GetItemSpell() returns the data. The cache isn't big enough to hold
-    -- every item though which is why we do 1000 at a time.
+    -- every item though which is why we do 100 at a time.
     for itemID = min, max do
-        GetItemInfo(itemID)
+        if select(6, GetItemInfoInstant(itemID)) == 8 then
+            GetItemInfo(itemID)
+        end
     end
 end
 
 local function ScanPartial(min, max)
     for itemID = min, max do
-        local itemSpellName, itemSpellID = GetItemSpell(itemID)
-        local itemName = GetItemInfo(itemID)
-        -- if the item casts a spell and any recipe also casts that spell
-        if itemSpellID and recipeSpellsByID[itemSpellID] then
-            SELECTED_CHAT_FRAME:AddMessage(format('Found one %d = %s', itemID, itemName))
-            -- associate the item with all recipes that cast the spell,
-            -- matching them by name
-            local allIDs = recipeSpellsByID[itemSpellID]
-            for _,spellID in ipairs(allIDs) do
-                TradeSkillPrice.db.scrollData = TradeSkillPrice.db.scrollData
-                        .. "\n" ..
-                        format("    [%06d] = %06d, -- %s", spellID, itemID, itemName)
+        if select(6, GetItemInfoInstant(itemID)) == 8 then
+            local itemSpellName, itemSpellID = GetItemSpell(itemID)
+            local itemName = GetItemInfo(itemID)
+            -- if the item casts a spell and any recipe also casts that spell
+            if itemSpellID and recipeSpellsByID[itemSpellID] then
+                SELECTED_CHAT_FRAME:AddMessage(format('Found one %d = %s', itemID, itemName))
+                -- associate the item with all recipes that cast the spell,
+                -- matching them by name
+                local allIDs = recipeSpellsByID[itemSpellID]
+                for _,spellID in ipairs(allIDs) do
+                    TradeSkillPrice.db.scrollData = TradeSkillPrice.db.scrollData
+                            .. "\n" ..
+                            format("    [%06d] = %06d, -- %s", spellID, itemID, itemName)
+                end
             end
         end
     end
@@ -58,13 +62,14 @@ local function GetAllRanks(info)
     return recipes
 end
 
-local function Scan()
+local function Scan(start, finish)
     SELECTED_CHAT_FRAME:AddMessage('You can close the tradeskill frame now.')
-    for i = 0, 249 do
-        SELECTED_CHAT_FRAME:AddMessage('Scan ' .. i*1000+1)
-        Precache(i*1000+1, (i+1)*1000)
+    for i = (start or 0), (finish or 2490) do
+        SELECTED_CHAT_FRAME:AddMessage('Precache ' .. i*100+1)
+        Precache(i*100+1, (i+1)*100)
         coroutine.yield()
-        ScanPartial(i*1000+1, (i+1)*1000)
+        SELECTED_CHAT_FRAME:AddMessage('ScanPartial ' .. i*100+1)
+        ScanPartial(i*100+1, (i+1)*100)
         coroutine.yield()
     end
     SELECTED_CHAT_FRAME:AddMessage('Finished')
@@ -73,11 +78,11 @@ end
 local function OnUpdate(self, elapsed)
     self.totalElapsed = (self.totalElapsed or 0) + elapsed
 
-    -- This 0.5s is intended to be long enough that the GetItemInfo()
-    -- data has time to come back from the server for 1000 items. There's
+    -- This 2s is intended to be long enough that the GetItemInfo()
+    -- data has time to come back from the server for 100 items. There's
     -- no way to tell for sure if it's enough.
 
-    if self.totalElapsed < 0.5 then
+    if self.totalElapsed < 0.3 then
         return
     end
 
@@ -100,7 +105,7 @@ end
 -- the enchanting scrolls cast the rank 1 version of the spell, but there's
 -- no reason to believe that will always be the case.
 
-function TradeSkillPrice:ScanForScrolls()
+function TradeSkillPrice:ScanForScrolls(start, finish)
     if not TradeSkillFrame or not TradeSkillFrame:IsVisible() then
         SELECTED_CHAT_FRAME:AddMessage('Open the enchanting tradeskill first.')
         return
@@ -116,7 +121,7 @@ function TradeSkillPrice:ScanForScrolls()
     end
 
     TradeSkillPrice.db.scrollData = "TradeSkillPrice.scrollData = {"
-    scanFrame.thread = coroutine.create(Scan)
+    scanFrame.thread = coroutine.create(function () Scan(start, finish) end)
     scanFrame:SetScript("OnUpdate", OnUpdate)
 end
 
@@ -674,5 +679,37 @@ TradeSkillPrice.scrollData = {
     [300770] = 168593, -- Enchant Weapon - Machinist's Brilliance
     [300788] = 168596, -- Enchant Weapon - Force Multiplier
     [300789] = 168598, -- Enchant Weapon - Naga Hide
+    [309612] = 172357, -- Enchant Ring - Bargain of Critical Strike
+    [309613] = 172358, -- Enchant Ring - Bargain of Haste
+    [309614] = 172359, -- Enchant Ring - Bargain of Mastery
+    [309615] = 172360, -- Enchant Ring - Bargain of Versatility
+    [309616] = 172361, -- Enchant Ring - Tenet of Critical Strike
+    [309617] = 172362, -- Enchant Ring - Tenet of Haste
+    [309618] = 172363, -- Enchant Ring - Tenet of Mastery
+    [309619] = 172364, -- Enchant Ring - Tenet of Versatility
+    [309622] = 172365, -- Enchant Weapon - Ascended Vigor
+    [309627] = 172366, -- Enchant Weapon - Celestial Guidance
+    [309621] = 172367, -- Enchant Weapon - Eternal Grace
+    [309623] = 172368, -- Enchant Weapon - Sinful Revelation
+    [309620] = 172370, -- Enchant Weapon - Lightless Force
+    [309524] = 172406, -- Enchant Gloves - Shadowlands Gathering
+    [309525] = 172407, -- Enchant Gloves - Strength of Soul
+    [309526] = 172408, -- Enchant Gloves - Eternal Strength
+    [309528] = 172410, -- Enchant Cloak - Fortified Speed
+    [309530] = 172411, -- Enchant Cloak - Fortified Avoidance
+    [309531] = 172412, -- Enchant Cloak - Fortified Leech
+    [309532] = 172413, -- Enchant Boots - Agile Soulwalker
+    [309608] = 172414, -- Enchant Bracers - Illuminated Soul
+    [309609] = 172415, -- Enchant Bracers - Eternal Intellect
+    [309610] = 172416, -- Enchant Bracers - Shaded Hearthing
+    [309535] = 172418, -- Enchant Chest - Eternal Bulwark
+    [309534] = 172419, -- Enchant Boots - Eternal Agility
+    [323760] = 177659, -- Enchant Chest - Eternal Skirmish
+    [323755] = 177660, -- Enchant Cloak - Soul Vitality
+    [323609] = 177661, -- Enchant Boots - Speed of Soul
+    [323761] = 177715, -- Enchant Chest - Eternal Bounds
+    [323762] = 177716, -- Enchant Chest - Sacred Stats
+    [324773] = 177962, -- Enchant Chest - Eternal Stats
+    [342316] = 183738, -- Enchant Chest - Eternal Insight
 }
 
