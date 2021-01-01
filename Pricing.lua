@@ -169,7 +169,9 @@ end
 
 function TradeSkillPrice:GetRecipeCost(recipeID)
     local object = recipeDetails[recipeID]
-    return GetMinRecipeCost(object, {})
+    if object then
+        return GetMinRecipeCost(object, {})
+    end
 end
 
 function TradeSkillPrice:GetRecipeTooltip(recipeID)
