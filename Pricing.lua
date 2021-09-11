@@ -76,6 +76,11 @@ local function UpdateRecipeDetails(recipeID)
     end
 
     object.itemLink = C_TradeSkillUI.GetRecipeItemLink(recipeID)
+
+    if not object.itemLink then
+        return
+    end
+
     object.itemID = GetItemInfoFromHyperlink(object.itemLink)
 
     if TradeSkillPrice.scrollData[recipeID] then
@@ -99,9 +104,8 @@ local function UpdateRecipeDetails(recipeID)
     for i=1, C_TradeSkillUI.GetRecipeNumReagents(recipeID) do
         local _, _, count = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, i)
         local reagentItemLink = C_TradeSkillUI.GetRecipeReagentItemLink(recipeID, i)
-        local reagentItemID = GetItemInfoFromHyperlink(reagentItemLink)
-
-        if reagentItemID then
+        if reagentItemLink then
+            local reagentItemID = GetItemInfoFromHyperlink(reagentItemLink)
             table.insert(object.reagents, { reagentItemID, count })
             TradeSkillPrice.db.knownReagents[reagentItemID] = true
         end
@@ -176,7 +180,9 @@ end
 
 function TradeSkillPrice:GetRecipeTooltip(recipeID)
     local object = recipeDetails[recipeID]
-    return GetMinRecipeTooltip(object, {})
+    if object then
+        return GetMinRecipeTooltip(object, {})
+    end
 end
 
 function TradeSkillPrice:GetItemValue(itemID)
