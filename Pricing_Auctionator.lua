@@ -17,83 +17,26 @@
 
 ----------------------------------------------------------------------------]]--
 
-local IDCache = { }
-
--- Auctionator's data is indexed only by name, and access using ids goes
--- through a GetItemInfo name lookup (which means that they're not available
--- at first request).
---
--- Auctionator keeps the itemIDs for the name in its history DB but it
--- never seems to use them, or make them available. Also some of them are
--- in gAtr_ScanDB for items that are manually scanned.
---
--- Honestly the more I look at it the worse it seems. I guess the auction
--- API added the itemID after they wrote the addon and they never rewrote
--- it to take advantage.
-
-local function RebuildIDCache()
-    wipe(IDCache)
-    for k,v in pairs(AUCTIONATOR_PRICING_HISTORY) do
-        if v.is then
-            local id = string.split(':', v.is)
-            id = tonumber(id)
-            IDCache[id] = IDCache[id] or {}
-            IDCache[id][k] = true
-        end
-    end
-    for k,v in pairs(gAtr_ScanDB) do
-        if v.id then
-            local id = string.split(':', v.id)
-            id = tonumber(id)
-            IDCache[id] = IDCache[id] or {}
-            IDCache[id][k] = true
-        end
-    end
-end
+local addonName, addonTable = ...
 
 local function AuctionValue(itemID, count)
-    if next(IDCache) == nil then
-        RebuildIDCache()
-    end
-
-    -- Doing it this way has two advantages:
-    --  1. It works before GetItemInfo returns id -> name data
-    --  2. It picks up "<item> of the <suffix>" creations
-
-    local price
-
-    if IDCache[itemID] then
-        -- This is picking the minimum price, because that's what
-        -- Atr_GetAuctionPrice does. It could do the mean price.
-        for itemName in pairs(IDCache[itemID]) do
-            local p = Atr_GetAuctionPrice(itemName)
-            if p and (price == nil or p < price) then
-                price = p
-            end
-        end
-    else
-        price = Atr_GetAuctionPrice(itemID)
-    end
-
-    if price then
-        return price * count, "a"
+    local a = Auctionator.API.v1.GetAuctionPriceByItemID(addonName, itemID)
+    local d = Auctionator.API.v1.GetDisenchantPriceByItemID(addonName, itemID)
+    if a and a > (d or 0) then
+        return a * count, "a"
+    elseif d and d > (a or 0) then
+        return d * count, "d"
     end
 end
 
 local function Cost(itemID, count)
-    local price
-    if IDCache[itemID] then
-        local itemName = next(IDCache[itemID])
-        price = Atr_GetAuctionPrice(itemName)
-    else
-        price = Atr_GetAuctionPrice(itemID)
-    end
+    local price = Auctionator.API.v1.GetAuctionPriceByItemID(addonName, itemID)
     if price then
         return price * count, "a"
     end
 end
 
-if Atr_GetAuctionPrice then
+if Auctionator and Auctionator.API and Auctionator.API.v1 then
     table.insert(TradeSkillPrice.valueFunctions,
                 {
                     ['name'] = 'Auctionator',
@@ -104,10 +47,4 @@ if Atr_GetAuctionPrice then
                     ['name'] = 'Auctionator',
                     ['func'] = Cost
                 })
-
-    Atr_RegisterFor_DBupdated(
-        function ()
-            RebuildIDCache()
-            TradeSkillPrice:RecalculatePrices()
-        end)
 end
