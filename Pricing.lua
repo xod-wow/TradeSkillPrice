@@ -50,7 +50,7 @@ recipeDetails objects:
   itemLink            String  ItemLink of created item
   numCreated          Number
   hasCooldown         Boolean
-  reagents            { itemID: count, ... }
+  reagents            { { itemLink, count }, ... }
 }
 
 ]]
@@ -86,7 +86,7 @@ local function UpdateRecipeDetails(recipeID)
     if TradeSkillPrice.scrollData[recipeID] then
         object.itemID = TradeSkillPrice.scrollData[recipeID]
         object.numCreated = 1
-    elseif object.itemID then
+    elseif object.itemLink then
         local a, b = C_TradeSkillUI.GetRecipeNumItemsProduced(recipeID)
         object.numCreated = (a+b)/2
     else
@@ -105,15 +105,15 @@ local function UpdateRecipeDetails(recipeID)
         local _, _, count = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, i)
         local reagentItemLink = C_TradeSkillUI.GetRecipeReagentItemLink(recipeID, i)
         if reagentItemLink then
+            table.insert(object.reagents, { reagentItemLink, count })
             local reagentItemID = GetItemInfoFromHyperlink(reagentItemLink)
-            table.insert(object.reagents, { reagentItemID, count })
             TradeSkillPrice.db.knownReagents[reagentItemID] = true
         end
     end
 
-    if object.itemID then
-        itemRecipesMap[object.itemID] = itemRecipesMap[object.itemID] or { }
-        itemRecipesMap[object.itemID][recipeID] = true
+    if object.itemLink then
+        itemRecipesMap[object.itemLink] = itemRecipesMap[object.itemLink] or { }
+        itemRecipesMap[object.itemLink][recipeID] = true
     end
 
     recipeDetails[recipeID] = object
@@ -134,11 +134,11 @@ end
 function TradeSkillPrice:ResetPricings()    
 end
 
-local function GetMinItemBuyCost(itemID, count)
+local function GetMinItemBuyCost(itemLink, count)
     local minCost, minCostSource
 
     for _,f in ipairs(TradeSkillPrice.costFunctions) do
-        local c, s = f.func(itemID, count)
+        local c, s = f.func(itemLink, count)
         if c and (minCost == nil or c < minCost) then
             minCost, minCostSource = c, s
         end
@@ -150,8 +150,8 @@ end
 local function GetMinRecipeCost(object, seen)
     local cost = 0
     for _, info in ipairs(object.reagents) do
-        local itemID, count = unpack(info)
-        local c, s = GetMinItemBuyCost(itemID, count)
+        local itemLink, count = unpack(info)
+        local c, s = GetMinItemBuyCost(itemLink, count)
         cost = cost + (c or 0)
     end
     return cost
@@ -162,9 +162,8 @@ local function GetMinRecipeTooltip(object, seen)
 
     local cost = 0
     for _, info in ipairs(object.reagents) do
-        local itemID, count = unpack(info)
-        local c, s = GetMinItemBuyCost(itemID, count)
-        local _, itemLink = GetItemInfo(itemID)
+        local itemLink, count = unpack(info)
+        local c, s = GetMinItemBuyCost(itemLink, count)
         table.insert(tooltipLines, { itemLink, count, c })
         cost = cost + (c or 0)
     end
@@ -185,9 +184,10 @@ function TradeSkillPrice:GetRecipeTooltip(recipeID)
     end
 end
 
-function TradeSkillPrice:GetItemValue(itemID)
+function TradeSkillPrice:GetItemValue(itemLink)
     local value, source
 
+    local itemID = GetItemInfoFromHyperlink(itemLink)
     local cData = TradeSkillPrice.alchemyContainerData[itemID]
     if cData then
         for _, info in ipairs(cData) do
@@ -201,7 +201,7 @@ function TradeSkillPrice:GetItemValue(itemID)
         end
     else
         for _,f in ipairs(TradeSkillPrice.valueFunctions) do
-            local v, s = f.func(itemID, 1)
+            local v, s = f.func(itemLink, 1)
             if v and v > (value or 0) then
                 value, source = v, s
             end
@@ -214,7 +214,7 @@ end
 function TradeSkillPrice:GetRecipeValue(recipeID)
     local object = recipeDetails[recipeID]
     if object and object.itemID then
-        local cost, source = self:GetItemValue(object.itemID)
+        local cost, source = self:GetItemValue(object.itemLink)
         if cost then
             return cost * object.numCreated, source
         end

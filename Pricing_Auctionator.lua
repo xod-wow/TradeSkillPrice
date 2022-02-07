@@ -19,9 +19,9 @@
 
 local addonName, addonTable = ...
 
-local function AuctionValue(itemID, count)
-    local a = Auctionator.API.v1.GetAuctionPriceByItemID(addonName, itemID)
-    local d = Auctionator.API.v1.GetDisenchantPriceByItemID(addonName, itemID)
+local function AuctionValue(itemLink, count)
+    local a = Auctionator.API.v1.GetAuctionPriceByItemLink(addonName, itemLink)
+    local d = Auctionator.API.v1.GetDisenchantPriceByItemLink(addonName, itemLink)
     if a and a > (d or 0) then
         return a * count, "a"
     elseif d and d > (a or 0) then
@@ -29,8 +29,8 @@ local function AuctionValue(itemID, count)
     end
 end
 
-local function Cost(itemID, count)
-    local price = Auctionator.API.v1.GetAuctionPriceByItemID(addonName, itemID)
+local function Cost(itemLink, count)
+    local price = Auctionator.API.v1.GetAuctionPriceByItemLink(addonName, itemLink)
     if price then
         return price * count, "a"
     end

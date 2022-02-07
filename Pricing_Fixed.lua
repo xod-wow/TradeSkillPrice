@@ -17,7 +17,8 @@
 
 ----------------------------------------------------------------------------]]--
 
-local function Cost(itemID, count)
+local function Cost(itemLink, count)
+    local itemID = GetItemInfoFromHyperlink(itemLink)
     if TradeSkillPrice.db.fixedPrice and TradeSkillPrice.db.fixedPrice[itemID] then
         return TradeSkillPrice.db.fixedPrice[itemID] * count, "f"
     end

@@ -18,14 +18,16 @@
 ----------------------------------------------------------------------------]]--
 
 
-local function GetVendorCost(itemID, count)
+local function GetVendorCost(itemLink, count)
+    local itemID = GetItemInfoFromHyperlink(itemLink)
     TradeSkillPrice.db.merchantItems = TradeSkillPrice.db.merchantItems or {}
     if TradeSkillPrice.db.merchantItems[itemID] then
         return TradeSkillPrice.db.merchantItems[itemID] * count, "v"
     end
 end
 
-local function GetVendorValue(itemID, count)
+local function GetVendorValue(itemLink, count)
+    local itemID = GetItemInfoFromHyperlink(itemLink)
     local sellPrice = select(11, GetItemInfo(itemID))
     if sellPrice then
         return sellPrice * count, "v"

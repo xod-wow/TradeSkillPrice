@@ -45,18 +45,32 @@ local function CreateScanButton()
     end
 end
 
-local function UpdateItemPrice(itemID, price, count, when)
+local function GetKey(itemID, itemLevel)
+    return string.format('%d:%d', itemID, itemLevel)
+end
+
+local function GetKeyFromBrowseResult(result)
+    return GetKey(result.itemKey.itemID, result.itemKey.itemLevel)
+end
+
+local function GetKeyFromItemLink(itemLink)
+    local itemID = GetItemInfoFromHyperlink(itemLink)
+    local itemLevel = GetDetailedItemLevelInfo(itemLink)
+    return GetKey(itemID, itemLevel)
+end
+
+local function UpdateItemPrice(key, price, count, when)
     local data = AHScanner.data
-    if not data[itemID] then
-        data[itemID] = {
+    if not data[key] then
+        data[key] = {
                 price = price,
                 count = count,
                 when = when
             }
-    elseif data[itemID].when < when or price < data[itemID].price then
-        data[itemID].price = price
-        data[itemID].count = count
-        data[itemID].when = when
+    elseif data[key].when < when or price < data[key].price then
+        data[key].price = price
+        data[key].count = count
+        data[key].when = when
     end
 end
 
@@ -66,7 +80,7 @@ local function ProcessReplicateItemList(self)
 
     local name, texture, count, qualityID, usable, level, levelType, minBid,
           minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName,
-          owner, ownerFullName, saleStatus, itemID, hasAllInfo
+          owner, ownerFullName, saleStatus, itemID, hasAllInfo, link
 
     TradeSkillPrice:ChatMessage(format('Processing %d auction scan listings.', n))
     -- The indexes are c-style 0 to n-1
@@ -75,9 +89,11 @@ local function ProcessReplicateItemList(self)
         minBid, minIncrement, buyoutPrice, bidAmount, highBidder,
         bidderFullName, owner, ownerFullName, saleStatus, itemID,
         hasAllInfo = C_AuctionHouse.GetReplicateItemInfo(i)
+        local link = C_AuctionHouse.GetReplicateItemLink(i)
 
         if buyoutPrice > 0 then
-            UpdateItemPrice(itemID, buyoutPrice/count, count, now)
+            local key = GetKeyFromItemLink(itemLink)
+            UpdateItemPrice(key, buyoutPrice/count, count, now)
         end
     end
 
@@ -88,22 +104,24 @@ local function ProcessBrowseResults(self, browseResults)
     TradeSkillPrice:ChatMessage(format('Processing %d auction browse results.', #browseResults))
     local now = time()
     for i, result in ipairs(browseResults) do
-        UpdateItemPrice(result.itemKey.itemID, result.minPrice, result.totalQuantity, now)
+        local key = GetKeyFromBrowseResult(result)
+        UpdateItemPrice(key, result.minPrice, result.totalQuantity, now)
     end
 end
 
-local function GetMinPrice(itemID, count)
-    if AHScanner.data and AHScanner.data[itemID] then
-        return AHScanner.data[itemID].price * count, "a"
+local function GetMinPrice(itemLink, count)
+    local key = GetKeyFromItemLink(itemLink)
+    if AHScanner.data and AHScanner.data[key] then
+        return AHScanner.data[key].price * count, "a"
     end
 end
 
 local function TooltipAddPrice(ttFrame, link, count)
     if not link then return end
     count = count or 1
-    local id = GetItemInfoFromHyperlink(link)
-    if id and AHScanner.data[id] then
-        local copper = AHScanner.data[id].price
+    local key = GetKeyFromItemLink(link)
+    if key and AHScanner.data[key] then
+        local copper = AHScanner.data[key].price
         local price = GetMoneyString(copper, true)
         local text = format('|cff80d060Auction :|r |cffffffff%s', price)
         ttFrame:AddLine(text)

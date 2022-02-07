@@ -17,15 +17,15 @@
 
 ----------------------------------------------------------------------------]]--
 
-local function Value(itemID, count)
-    local price = AucAdvanced.API.GetMarketValue(itemID)
+local function Value(itemLink, count)
+    local price = AucAdvanced.API.GetMarketValue(itemLink)
     if price then
         return price * count, "a"
     end
 end
 
-local function Cost(itemID, count)
-    local cost = AucAdvanced.API.GetAlgorithmValue("Appraiser", itemID)
+local function Cost(itemLink, count)
+    local cost = AucAdvanced.API.GetAlgorithmValue("Appraiser", itemLink)
     if cost then
         return cost * count, "a"
     end
