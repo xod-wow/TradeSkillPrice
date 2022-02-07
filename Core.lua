@@ -251,6 +251,9 @@ function TradeSkillPrice:Initialize()
     for k,v in pairs(defaultConfig) do
         self.db[k] = self.db[k] or {}
     end
+    for _,itemID in ipairs(self.scrollData) do
+        GetItemInfo(itemID)
+    end
     self.initialized = true
 end
 

@@ -85,6 +85,7 @@ local function UpdateRecipeDetails(recipeID)
 
     if TradeSkillPrice.scrollData[recipeID] then
         object.itemID = TradeSkillPrice.scrollData[recipeID]
+        object.itemLink = select(2, GetItemInfo(object.itemID))
         object.numCreated = 1
     elseif object.itemLink then
         local a, b = C_TradeSkillUI.GetRecipeNumItemsProduced(recipeID)
