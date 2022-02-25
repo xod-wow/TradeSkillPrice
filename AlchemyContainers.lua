@@ -21,7 +21,7 @@
 
 TradeSkillPrice.alchemyContainerData = {
     [165851] = {            -- Bag of Anchors
-        { "|cff1eff00|Hitem:152510::::::::60:269:::::::::|h[Anchor Weed]|h|r", 10 }      -- 10 Anchor Weed
+        { 152510, 10 }      -- 10 Anchor Weed
     },
 }
 

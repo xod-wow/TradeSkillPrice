@@ -251,8 +251,17 @@ function TradeSkillPrice:Initialize()
     for k,v in pairs(defaultConfig) do
         self.db[k] = self.db[k] or {}
     end
-    for _,itemID in ipairs(self.scrollData) do
-        GetItemInfo(itemID)
+    for spellID,itemID in pairs(self.scrollData) do
+        local item = Item:CreateFromItemID(itemID)
+        item:ContinueOnItemLoad(
+            function () self.scrollData[spellID] = item:GetItemLink() end)
+    end
+    for itemID, contents in pairs(self.alchemyContainerData) do
+        for _, info in ipairs(contents) do
+            local item = Item:CreateFromItemID(info[1])
+            item:ContinueOnItemLoad(
+                function () info[3] = item:GetItemLink() end)
+        end
     end
     self.initialized = true
 end

@@ -20,8 +20,8 @@
 local recipeDetails = { }
 local itemRecipesMap = { }
 
--- TradeSkillPrice._recipeDetails = recipeDetails
--- TradeSkillPrice._itemRecipesMap = itemRecipesMap
+TradeSkillPrice._recipeDetails = recipeDetails
+TradeSkillPrice._itemRecipesMap = itemRecipesMap
 
 --[[
 recipeDetails objects:
@@ -84,8 +84,8 @@ local function UpdateRecipeDetails(recipeID)
     object.itemID = GetItemInfoFromHyperlink(object.itemLink)
 
     if TradeSkillPrice.scrollData[recipeID] then
-        object.itemID = TradeSkillPrice.scrollData[recipeID]
-        object.itemLink = select(2, GetItemInfo(object.itemID))
+        object.itemLink = TradeSkillPrice.scrollData[recipeID]
+        object.itemID = GetItemInfoFromHyperlink(object.itemLink)
         object.numCreated = 1
     elseif object.itemLink then
         local a, b = C_TradeSkillUI.GetRecipeNumItemsProduced(recipeID)
@@ -105,10 +105,17 @@ local function UpdateRecipeDetails(recipeID)
     for i=1, C_TradeSkillUI.GetRecipeNumReagents(recipeID) do
         local _, _, count = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, i)
         local reagentItemLink = C_TradeSkillUI.GetRecipeReagentItemLink(recipeID, i)
-        if reagentItemLink then
-            table.insert(object.reagents, { reagentItemLink, count })
-            local reagentItemID = GetItemInfoFromHyperlink(reagentItemLink)
-            TradeSkillPrice.db.knownReagents[reagentItemID] = true
+
+        -- First time around the returned itemLink doesn't have the name in it!
+        local reagentItemID = GetItemInfoFromHyperlink(reagentItemLink)
+        local item = Item:CreateFromItemID(reagentItemID)
+        if not item:IsItemEmpty() then
+            item:ContinueOnItemLoad(
+                function ()
+                    object.reagents[i] = { item:GetItemLink(), count }
+                    TradeSkillPrice.db.knownReagents[reagentItemID] = true
+                end
+            )
         end
     end
 
@@ -192,7 +199,7 @@ function TradeSkillPrice:GetItemValue(itemLink)
     local cData = TradeSkillPrice.alchemyContainerData[itemID]
     if cData then
         for _, info in ipairs(cData) do
-            local v, s = self:GetItemValue(info[1])
+            local v, s = self:GetItemValue(info[3])
             if not source then
                 source = s
             elseif source ~= s then
