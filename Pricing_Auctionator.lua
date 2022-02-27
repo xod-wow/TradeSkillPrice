@@ -47,4 +47,16 @@ if Auctionator and Auctionator.API and Auctionator.API.v1 then
                     ['name'] = 'Auctionator',
                     ['func'] = Cost
                 })
+    Auctionator.EventBus:Register(
+        {
+            ReceiveEvent =
+                function ()
+                    TradeSkillPrice:RecalculatePrices()
+                end
+        },
+        {
+            Auctionator.FullScan.Events.ScanComplete,
+            Auctionator.IncrementalScan.Events.ScanComplete,
+        }
+    )
 end
