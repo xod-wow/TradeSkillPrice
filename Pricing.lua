@@ -128,9 +128,9 @@ local function UpdateRecipeDetails(recipeID)
 end
 
 function TradeSkillPrice:ScanOpenTradeskill()
-    if C_TradeSkillUI.IsTradeSkillLinked() then
-        return
-    end
+--  if C_TradeSkillUI.IsTradeSkillLinked() then
+--      return
+--  end
 
     for i, recipeID in ipairs(C_TradeSkillUI.GetAllRecipeIDs()) do
         if not recipeDetails[recipeID] then
