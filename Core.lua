@@ -21,8 +21,7 @@ local modName, modTable = ...
 
 TradeSkillPrice = CreateFrame("Frame", "TradeSkillPrice")
 TradeSkillPrice.version = GetAddOnMetadata(modName, "Version")
-TradeSkillPrice.costFunctions = {}
-TradeSkillPrice.valueFunctions = {}
+TradeSkillPrice.priceModules = {}
 
 local defaultConfig = {
     vendorOverride = {},

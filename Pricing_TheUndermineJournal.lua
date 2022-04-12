@@ -25,15 +25,15 @@ local function AuctionPrice(itemLink, count)
     end
 end
 
+local function UpdateTime()
+end
+
 if TUJMarketInfo then
-    table.insert(TradeSkillPrice.valueFunctions,
-                {
-                    ['name'] = 'TheUndermineJournal',
-                    ['func'] = AuctionPrice
-                })
-    table.insert(TradeSkillPrice.costFunctions,
-                {
-                    ['name'] = 'TheUndermineJournal',
-                    ['func'] = AuctionPrice
-                })
+    table.insert(TradeSkillPrice.priceModules,
+        {
+            ['name'] = 'TheUndermineJournal',
+            ['GetBuyPrice'] = AuctionPrice,
+            ['GetSellPrice'] = AuctionPrice,
+            ['GetUpdateTime'] = UpdateTime,
+        })
 end

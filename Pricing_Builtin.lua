@@ -97,6 +97,8 @@ local function ProcessReplicateItemList(self)
         end
     end
 
+    self.data.__update_time__ = now
+
     TradeSkillPrice:ChatMessage(format('Processed %d auction scan listings.', n))
 end
 
@@ -138,10 +140,14 @@ local function TooltipAddPrice(ttFrame, link, count)
     end
 end
 
+local function GetUpdateTime()
+    return AHScanner.data.__update_time__
+end
+
 local function Init(self)
 
-    -- This is not a good test. Assume if we only have vendor we shoud load
-    if #TradeSkillPrice.valueFunctions > 1 then
+    -- This is not a good test. Assume if we only have vendor we should load
+    if #TradeSkillPrice.priceModules > 1 then
         TradeSkillPrice.db.auctionData = nil
         return
     end
@@ -154,16 +160,14 @@ local function Init(self)
 
     FrameUtil.RegisterFrameForEvents(self, AH_SHOWHIDE_EVENTS)
 
-    table.insert(TradeSkillPrice.valueFunctions,
-                {
-                    ['name'] = 'TradeSkillPrice',
-                    ['func'] =  GetMinPrice,
-                })
-    table.insert(TradeSkillPrice.costFunctions,
-                {
-                    ['name'] = 'TradeSkillPrice',
-                    ['func'] =  GetMinPrice,
-                })
+    table.insert(TradeSkillPrice.priceModules,
+        {
+            ['name'] = 'TradeSkillPrice',
+            ['GetPrice'] = GetMinPrice,
+            ['GetCost'] = GetMinPrice,
+            ['GetUpdateTime'] = GetUpdateTime,
+        })
+
 
     hooksecurefunc(GameTooltip, 'SetBagItem',
         function (ttFrame, bag, slot)
@@ -217,7 +221,7 @@ local function OnEvent(self, event, arg1, ...)
         ProcessBrowseResults(self, browseResults)
     elseif event == 'REPLICATE_ITEM_LIST_UPDATE' then
         if time() > (self.lastReplicate or 0) + 60 then
-            ProcessReplicateItemList(self, browseResults)
+            ProcessReplicateItemList(self)
             self.lastReplicate = time()
         end
     elseif event == 'ADDON_LOADED' then

@@ -24,8 +24,13 @@ local function Cost(itemLink, count)
     end
 end
 
-table.insert(TradeSkillPrice.costFunctions,
-            {
-                ['name'] = 'Fixed',
-                ['func'] = Cost
-            })
+local function UpdateTime()
+    return time()
+end
+
+table.insert(TradeSkillPrice.priceModules,
+    {
+        ['name'] = 'Fixed',
+        ['GetBuyPrice'] = Cost,
+        ['GetUpdateTime'] = UpdateTime,
+    })

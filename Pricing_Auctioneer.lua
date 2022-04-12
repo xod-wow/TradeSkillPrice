@@ -31,17 +31,18 @@ local function Cost(itemLink, count)
     end
 end
 
+-- I don't think Auctioneer saves it, we'd have to do it ourselves
+local function UpdateTime()
+end
+
 if AucAdvanced and AucAdvanced.API then
-    table.insert(TradeSkillPrice.valueFunctions,
-                {
-                    ['name'] = 'Auctioneer',
-                    ['func'] =  Value
-                })
-    table.insert(TradeSkillPrice.costFunctions,
-                {
-                    ['name'] = 'Auctioneer',
-                    ['func'] =  Cost
-                })
+    table.insert(TradeSkillPrice.priceModules,
+        {
+            ['name'] = 'Auctioneer',
+            ['GetSellPrice'] =  Value,
+            ['GetBuyPrice'] = Cost,
+            ['GetUpdateTime'] = UpdateTime,
+        })
 
     local mod = AucAdvanced.NewModule("Util", "TradeSkillPrice")
     mod.Processors = {}

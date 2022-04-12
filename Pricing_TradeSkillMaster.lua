@@ -20,45 +20,40 @@
 local addonName, addonTable = ...
 
 local function Value(itemLink, count)
-    local a = Auctionator.API.v1.GetAuctionPriceByItemLink(addonName, itemLink)
-    local d = Auctionator.API.v1.GetDisenchantPriceByItemLink(addonName, itemLink)
-    if a and a > (d or 0) then
-        return a * count, "a"
-    elseif d and d > (a or 0) then
-        return d * count, "d"
+    local itemString = TSM_API.ToItemString(itemLink)
+    local a = TSM_API.GetCustomPriceValue('DBMarket', itemString) or 0
+    local d = TSM_API.GetCustomPriceValue('Destroy', itemString) or 0
+    local v = TSM_API.GetCustomPriceValue('VendorSell', itemString) or 0
+
+    local p = math.max(a, d, v)
+
+    if p == a then
+        return a * count / 10000, "a"
+    elseif p == d then
+        return d * count / 10000, "d"
+    elseif p == v then
+        return v * count / 10000, "v"
     end
 end
 
 local function Cost(itemLink, count)
-    local price = Auctionator.API.v1.GetAuctionPriceByItemLink(addonName, itemLink)
-    if price then
-        return price * count, "a"
+    local itemString = TSM_API.ToItemString(itemLink)
+    local p = TSM_API.GetCustomPriceValue('DBMarket', itemString)
+    if p then
+        return p * count, "a"
     end
 end
 
 local function UpdateTime()
-    return Auctionator.SavedState.TimeOfLastReplicateScan
+    return time()
 end
 
-if Auctionator and Auctionator.API and Auctionator.API.v1 then
+if TSM_API then
     table.insert(TradeSkillPrice.priceModules,
         {
-            ['name'] = 'Auctionator',
+            ['name'] = 'TradeSkillPrice',
             ['GetSellPrice'] =  Value,
             ['GetBuyPrice'] = Cost,
             ['GetUpdateTime'] = UpdateTime,
         })
-
-    Auctionator.EventBus:Register(
-        {
-            ReceiveEvent =
-                function ()
-                    TradeSkillPrice:RecalculatePrices()
-                end
-        },
-        {
-            Auctionator.FullScan.Events.ScanComplete,
-            Auctionator.IncrementalScan.Events.ScanComplete,
-        }
-    )
 end

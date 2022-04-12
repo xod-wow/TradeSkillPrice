@@ -145,10 +145,12 @@ end
 local function GetMinItemBuyCost(itemLink, count)
     local minCost, minCostSource
 
-    for _,f in ipairs(TradeSkillPrice.costFunctions) do
-        local c, s = f.func(itemLink, count)
-        if c and (minCost == nil or c < minCost) then
-            minCost, minCostSource = c, s
+    for _,m in ipairs(TradeSkillPrice.priceModules) do
+        if m.GetBuyPrice then
+            local c, s = m.GetBuyPrice(itemLink, count)
+            if c and (minCost == nil or c < minCost) then
+                minCost, minCostSource = c, s
+            end
         end
     end
 
@@ -208,10 +210,12 @@ function TradeSkillPrice:GetItemValue(itemLink)
             value = (value or 0) + v * info[2]
         end
     else
-        for _,f in ipairs(TradeSkillPrice.valueFunctions) do
-            local v, s = f.func(itemLink, 1)
-            if v and v > (value or 0) then
-                value, source = v, s
+        for _,m in ipairs(TradeSkillPrice.priceModules) do
+            if m.GetSellPrice then
+                local v, s = m.GetSellPrice(itemLink, 1)
+                if v and v > (value or 0) then
+                    value, source = v, s
+                end
             end
         end
     end

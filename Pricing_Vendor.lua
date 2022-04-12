@@ -52,15 +52,14 @@ local function ScanMerchantForReagents()
     end
 end
 
-table.insert(TradeSkillPrice.costFunctions,
-            {
-                ['name'] = TRANSMOG_SOURCE_3,
-                ['func'] = GetVendorCost
-            })
-table.insert(TradeSkillPrice.valueFunctions, { 
-                ['name'] = TRANSMOG_SOURCE_3,
-                ['func'] = GetVendorValue
-            })
+table.insert(TradeSkillPrice.priceModules,
+    {
+        ['name'] = TRANSMOG_SOURCE_3,
+        ['GetBuyPrice'] = GetVendorPrice,
+        ['GetsellPrice'] = GetVendorValue,
+        ['GetUpdateTime'] = function () return time() end,
+    }
+ )
 
 local scanner = CreateFrame('frame')
 scanner:RegisterEvent('MERCHANT_SHOW')
