@@ -142,15 +142,33 @@ end
 function TradeSkillPrice:ResetPricings()    
 end
 
+local pricerTable = {}
+
+function TradeSkillPrice:GetPricers(funcName)
+    table.wipe(pricerTable)
+    local mostRecent = -1
+
+    for _,m in ipairs(self.priceModules) do
+        if m[funcName] then
+            local updateTime = m:GetUpdateTime()
+            if updateTime == 1 then
+                table.insert(pricerTable, m)
+            elseif updateTime > mostRecent then
+                table.insert(pricerTable, m)
+                mostRecent = updateTime
+            end
+        end
+    end
+    return pricerTable
+end
+
 local function GetMinItemBuyCost(itemLink, count)
     local minCost, minCostSource
 
-    for _,m in ipairs(TradeSkillPrice.priceModules) do
-        if m.GetBuyPrice then
-            local c, s = m.GetBuyPrice(itemLink, count)
-            if c and (minCost == nil or c < minCost) then
-                minCost, minCostSource = c, s
-            end
+    for _,m in ipairs(TradeSkillPrice:GetPricers('GetBuyPrice')) do
+        local c, s = m.GetBuyPrice(itemLink, count)
+        if c and (minCost == nil or c < minCost) then
+            minCost, minCostSource = c, s
         end
     end
 
@@ -210,12 +228,10 @@ function TradeSkillPrice:GetItemValue(itemLink)
             value = (value or 0) + v * info[2]
         end
     else
-        for _,m in ipairs(TradeSkillPrice.priceModules) do
-            if m.GetSellPrice then
-                local v, s = m.GetSellPrice(itemLink, 1)
-                if v and v > (value or 0) then
-                    value, source = v, s
-                end
+        for _,m in ipairs(TradeSkillPrice:GetPricers('GetSellPrice')) do
+            local v, s = m.GetSellPrice(itemLink, 1)
+            if v and v > (value or 0) then
+                value, source = v, s
             end
         end
     end

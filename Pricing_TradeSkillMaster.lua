@@ -28,11 +28,11 @@ local function Value(itemLink, count)
     local p = math.max(a, d, v)
 
     if p == a then
-        return a * count / 10000, "a"
+        return a * count, "a"
     elseif p == d then
-        return d * count / 10000, "d"
+        return d * count, "d"
     elseif p == v then
-        return v * count / 10000, "v"
+        return v * count, "v"
     end
 end
 
@@ -45,13 +45,18 @@ local function Cost(itemLink, count)
 end
 
 local function UpdateTime()
-    return time()
+    -- this is super sketchy
+    if TradeSkillMaster_AppHelperDB then
+        return TradeSkillMaster_AppHelperDB.analytics.updateTime
+    else
+        return time()
+    end
 end
 
 if TSM_API then
     table.insert(TradeSkillPrice.priceModules,
         {
-            ['name'] = 'TradeSkillPrice',
+            ['name'] = 'TSM_API',
             ['GetSellPrice'] =  Value,
             ['GetBuyPrice'] = Cost,
             ['GetUpdateTime'] = UpdateTime,

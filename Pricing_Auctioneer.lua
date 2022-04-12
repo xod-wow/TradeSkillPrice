@@ -33,6 +33,7 @@ end
 
 -- I don't think Auctioneer saves it, we'd have to do it ourselves
 local function UpdateTime()
+    return 0
 end
 
 if AucAdvanced and AucAdvanced.API then

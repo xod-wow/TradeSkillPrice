@@ -37,7 +37,7 @@ local function Cost(itemLink, count)
 end
 
 local function UpdateTime()
-    return Auctionator.SavedState.TimeOfLastReplicateScan
+    return Auctionator.SavedState.TimeOfLastReplicateScan or 0
 end
 
 if Auctionator and Auctionator.API and Auctionator.API.v1 then

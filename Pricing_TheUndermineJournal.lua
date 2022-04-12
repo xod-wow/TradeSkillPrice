@@ -26,6 +26,7 @@ local function AuctionPrice(itemLink, count)
 end
 
 local function UpdateTime()
+    return 0
 end
 
 if TUJMarketInfo then

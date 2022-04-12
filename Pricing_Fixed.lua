@@ -25,7 +25,7 @@ local function Cost(itemLink, count)
 end
 
 local function UpdateTime()
-    return time()
+    return 1
 end
 
 table.insert(TradeSkillPrice.priceModules,

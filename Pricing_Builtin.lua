@@ -141,7 +141,7 @@ local function TooltipAddPrice(ttFrame, link, count)
 end
 
 local function GetUpdateTime()
-    return AHScanner.data.__update_time__
+    return AHScanner.data.__update_time__ or 0
 end
 
 local function Init(self)

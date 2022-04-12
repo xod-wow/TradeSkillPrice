@@ -28,13 +28,13 @@ TradeSkillPrice.xml
 Core.lua
 AlchemyContainers.lua
 EnchantingScrolls.lua
-
 Pricing.lua
-Pricing_Fixed.lua
-Pricing_Vendor.lua
+
+Pricing_TradeSkillMaster.lua
+Pricing_TheUndermineJournal.lua
 Pricing_Auctionator.lua
 Pricing_Auctioneer.lua
-Pricing_TheUndermineJournal.lua
-Pricing_TradeSkillMaster.lua
 Pricing_Builtin.lua
 
+Pricing_Fixed.lua
+Pricing_Vendor.lua
