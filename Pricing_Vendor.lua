@@ -55,8 +55,8 @@ end
 table.insert(TradeSkillPrice.priceModules,
     {
         ['name'] = TRANSMOG_SOURCE_3,
-        ['GetBuyPrice'] = GetVendorPrice,
-        ['GetsellPrice'] = GetVendorValue,
+        ['GetBuyPrice'] = GetVendorCost,
+        ['GetSellPrice'] = GetVendorValue,
         ['GetUpdateTime'] = function () return 1 end,
     }
  )
