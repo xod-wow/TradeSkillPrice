@@ -154,6 +154,12 @@ function TradeSkillPrice.SetUpHeader(button, textWidth, tradeSkillInfo)
 end
 
 function TradeSkillPrice.SetUpRecipe(button, textWidth, tradeSkillInfo)
+    -- Protoform Synthesis
+    if C_TradeSkillUI.GetTradeSkillLine() == 2819 then
+        button.lswCost:Hide()
+        button.lswValue:Hide()
+        return
+    end
 
     local width = textWidth
                     - button.lswValue:GetWidth()

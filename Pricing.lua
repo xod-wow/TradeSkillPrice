@@ -85,6 +85,10 @@ local function UpdateRecipeDetails(recipeID)
 
     if TradeSkillPrice.scrollData[recipeID] then
         object.itemLink = TradeSkillPrice.scrollData[recipeID]
+        -- Bail out if the init hasn't turned it into a link yet
+        if type(object.itemLink) ~= 'string' then
+            return
+        end
         object.itemID = GetItemInfoFromHyperlink(object.itemLink)
         object.numCreated = 1
     elseif object.itemLink then
